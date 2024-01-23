@@ -3,5 +3,7 @@ project(project_title LANGUAGES CXX C)
 
 include(../common/cmake-common.cmake)
 
-add_executable(lab-01 src/lab-01.cpp src/Poisson1D.cpp)
+add_executable(lab-01 src/lab-01.cpp src/Poisson1D.cpp
+        src/MonodomainSolver.h
+        src/MonodomainSolver.cpp)
 deal_ii_setup_target(lab-01)
