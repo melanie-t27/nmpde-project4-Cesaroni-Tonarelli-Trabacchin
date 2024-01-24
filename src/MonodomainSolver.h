@@ -346,7 +346,7 @@ protected:
     TrilinosWrappers::SparseMatrix rhs_matrix;
 
     // Right-hand side vector in the linear system.
-    TrilinosWrappers::MPI::Vector system_rhs;
+    TrilinosWrappers::MPI::Vector residual_vector;
 
     // System solution (without ghost elements).
     TrilinosWrappers::MPI::Vector solution_owned;
@@ -356,12 +356,6 @@ protected:
 
     // System solution at previous time step.
     TrilinosWrappers::MPI::Vector solution_old;
-
-    // Jacobian matrix.
-    TrilinosWrappers::SparseMatrix jacobian_matrix;
-
-    // Residual vector.
-    TrilinosWrappers::MPI::Vector residual_vector;
 
 };
 

@@ -104,15 +104,18 @@ MonodomainSolver::assemble_matrices()
     FullMatrix<double> cell_stiffness_matrix(dofs_per_cell, dofs_per_cell);
     Vector<double>     cell_residual(dofs_per_cell);
 
-    residual_vector = 0.0;
 
     std::vector<types::global_dof_index> dof_indices(dofs_per_cell);
 
     // Value and gradient of the solution on current cell.
     std::vector<double>         solution_loc(n_q);
     std::vector<Tensor<1, dim>> solution_gradient_loc(n_q);
+
     // Value of the solution at previous timestep (un) on current cell.
     std::vector<double> solution_old_loc(n_q);
+
+    std::vector<Tensor<1, dim>> solution_old_gradient_loc(n_q);
+
 
     mass_matrix      = 0.0;
     stiffness_matrix = 0.0;
@@ -130,13 +133,11 @@ MonodomainSolver::assemble_matrices()
 
         fe_values.get_function_values(solution, solution_loc);
         fe_values.get_function_gradients(solution, solution_gradient_loc);
+        fe_values.get_function_gradients(solution_old, solution_old_gradient_loc);
         fe_values.get_function_values(solution_old, solution_old_loc);
 
         for (unsigned int q = 0; q < n_q; ++q)
         {
-            // Evaluate coefficients on this quadrature node.
-            const double mu_loc = mu.value(fe_values.quadrature_point(q));
-
             for (unsigned int i = 0; i < dofs_per_cell; ++i)
             {
                 for (unsigned int j = 0; j < dofs_per_cell; ++j)
@@ -147,15 +148,15 @@ MonodomainSolver::assemble_matrices()
                                               deltat * fe_values.JxW(q);
 
                     // diffusion term
-                    cell_stiffness_matrix(i, j) += diffusion_matrix *
+                    cell_stiffness_matrix(i, j) += diffusion_matrix * theta *
                                                     fe_values.shape_grad(j, q) *
-                                                    fe_values.shape_grad(j, q) *
+                                                    fe_values.shape_grad(i, q) *
                                                     fe_values.JxW(q);
 
                     // J ion term
                     cell_stiffness_matrix(i,j) -= 1 / h *
-                            (J_ion(solution_loc[q] + 2 * h * fe_values.shape_value(j, q)
-                                - J_ion(solution_loc[q] - 2 * h * fe_values.shape_value(j, q))
+                            (J_ion(theta*solution_loc[q] + 2 * theta*  h * fe_values.shape_value(j, q) + (1-theta) * solution_old_loc[q])
+                                - J_ion(solution_loc[q] - 2 * theta* h * fe_values.shape_value(j, q) + (1-theta) * solution_old_loc[q]))
                             * fe_values.shape_value(i, q) / 2 * fe_values.JxW(q);
                 }
 
@@ -166,9 +167,24 @@ MonodomainSolver::assemble_matrices()
                                     deltat * fe_values.shape_value(i, q) *
                                     fe_values.JxW(q);
 
-                //
-                
+                // Diffusion terms
+                cell_residual(i) -= diffusion_matrix * theta * solution_gradient_loc[q]
+                                        * fe_values.shape_grad(i, q) * fe_values.JxW(q);
 
+                cell_residual(i) -= diffusion_matrix * (1-theta) * solution_old_gradient_loc[q]
+                                        * fe_values.shape_grad(i, q) * fe_values.JxW(q);
+
+                // J ion term
+                cell_residual(i) += J_ion(theta*solution_loc[q] + (1-theta)*solution_old_loc[q])*fe_values.shape_value(i,q)
+                                        *fe_values.JxW(q);
+
+                // Forcing term
+                j_app.set_time(getCurrentTime());
+                cell_residual(i) += theta * j_app.value(fe_values.shape_value(i, q)) * fe_values.JxW(q);
+
+                j_app.set_time(getCurrentTime() - deltat);
+                cell_residual(i) += (1-theta) * j_app.value(fe_values.shape_value(i, q)) * fe_values.JxW(q);
+                j_app.set_time(getCurrentTime());
             }
         }
 
@@ -176,18 +192,16 @@ MonodomainSolver::assemble_matrices()
 
         mass_matrix.add(dof_indices, cell_mass_matrix);
         stiffness_matrix.add(dof_indices, cell_stiffness_matrix);
+        residual_vector.add(dof_indices, cell_residual);
     }
-
     mass_matrix.compress(VectorOperation::add);
     stiffness_matrix.compress(VectorOperation::add);
+    residual_vector.compress(VectorOperation::add);
 
     // We build the matrix on the left-hand side of the algebraic problem (the one
     // that we'll invert at each timestep).
     lhs_matrix.copy_from(mass_matrix);
-    lhs_matrix.add(theta, stiffness_matrix);
+    lhs_matrix.add(1, stiffness_matrix);
 
-    // We build the matrix on the right-hand side (the one that multiplies the old
-    // solution un).
-    rhs_matrix.copy_from(mass_matrix);
-    rhs_matrix.add(-(1.0 - theta), stiffness_matrix);
+
 }
