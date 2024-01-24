@@ -74,7 +74,7 @@ MonodomainSolver::setup()
         sparsity.compress();
 
         pcout << "  Initializing the matrices" << std::endl;
-        jacobian_matrix.reinit(sparsity);
+        lhs_matrix.reinit(sparsity);
 
         pcout << "  Initializing the system right-hand side" << std::endl;
         residual_vector.reinit(locally_owned_dofs, MPI_COMM_WORLD);
@@ -88,7 +88,7 @@ MonodomainSolver::setup()
 }
 
 void
-MonodomainSolver::assemble_matrices()
+MonodomainSolver::assemble_system()
 {
     pcout << "===============================================" << std::endl;
     pcout << "Assembling the system matrices" << std::endl;
@@ -116,9 +116,8 @@ MonodomainSolver::assemble_matrices()
 
     std::vector<Tensor<1, dim>> solution_old_gradient_loc(n_q);
 
-
-    mass_matrix      = 0.0;
-    stiffness_matrix = 0.0;
+    lhs_matrix      = 0.0;
+    residual_vector = 0.0;
 
     for (const auto &cell : dof_handler.active_cell_iterators())
     {
@@ -147,7 +146,7 @@ MonodomainSolver::assemble_matrices()
                                               deltat * fe_values.JxW(q);
 
                     // diffusion term
-                    cell_matrix(i, j) += diffusion_matrix * theta *
+                    cell_matrix(i, j) += diffusion_matrix.value(fe_values.quadrature_point(q)) * theta *
                                                     fe_values.shape_grad(j, q) *
                                                     fe_values.shape_grad(i, q) *
                                                     fe_values.JxW(q);
@@ -167,10 +166,10 @@ MonodomainSolver::assemble_matrices()
                                     fe_values.JxW(q);
 
                 // Diffusion terms
-                cell_residual(i) -= diffusion_matrix * theta * solution_gradient_loc[q]
+                cell_residual(i) -= diffusion_matrix.value(fe_values.quadrature_point(q)) * theta * solution_gradient_loc[q]
                                         * fe_values.shape_grad(i, q) * fe_values.JxW(q);
 
-                cell_residual(i) -= diffusion_matrix * (1 - theta) * solution_old_gradient_loc[q]
+                cell_residual(i) -= diffusion_matrix.value(fe_values.quadrature_point(q)) * (1 - theta) * solution_old_gradient_loc[q]
                                         * fe_values.shape_grad(i, q) * fe_values.JxW(q);
 
                 // J ion term
@@ -179,10 +178,12 @@ MonodomainSolver::assemble_matrices()
 
                 // Forcing term
                 j_app.set_time(getCurrentTime());
-                cell_residual(i) += theta * j_app.value(fe_values.shape_value(i, q)) * fe_values.JxW(q);
+                cell_residual(i) += theta * j_app.value(fe_values.quadrature_point(q))
+                                        * fe_values.shape_value(i, q) * fe_values.JxW(q);
 
                 j_app.set_time(getCurrentTime() - deltat);
-                cell_residual(i) += (1-theta) * j_app.value(fe_values.shape_value(i, q)) * fe_values.JxW(q);
+                cell_residual(i) += (1-theta) * j_app.value(fe_values.quadrature_point(q)) *
+                                        fe_values.shape_value(i, q) * fe_values.JxW(q);
 
                 j_app.set_time(getCurrentTime());
             }
@@ -268,8 +269,12 @@ void
 MonodomainSolver::solve()
 {
     pcout << "===============================================" << std::endl;
+
     time += deltat;
     ++time_step;
+
+    j_app.set_time(getCurrentTime());
+    diffusion_matrix.set_time(getCurrentTime());
 
     // Store the old solution, so that it is available for assembly.
     solution_old = solution;

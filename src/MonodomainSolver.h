@@ -7,6 +7,7 @@
 
 #include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/quadrature_lib.h>
+#include <deal.II/base/tensor_function.h>
 
 #include <deal.II/distributed/fully_distributed_tria.h>
 
@@ -52,7 +53,7 @@ public:
             }
         }
 
-        virtual double
+        virtual Tensor<2,dim>
         value(const Point<dim> &/*p*/) const override {
             return _tensor;
         }
@@ -67,7 +68,7 @@ public:
         value(const Point<dim> &/*p*/,
               const unsigned int /*component*/ = 0) const override
         {
-            if(getCurrentTime() < 0.001)
+            if(get_time() < 0.001)
                 return 1.0;
             else return 0.0;
         }
@@ -107,28 +108,17 @@ public:
 
     // Get current time
     double
-    getCurrentTime(){
-        return time;
-    }
-
-    // Set current time
-    void
-    setCurrentTime(double _time){
-        time = _time;
-    }
-
-    // Get current time
-    double
     getCurrentTime() const{
         return time;
     }
-    // Set current time
+
+    // Set State Variable w
     void
     setStateVariables(const std::vector<double>& _w){
         w = _w;
     }
 
-    // Get current time
+    // Get State Variable w
     std::vector<double>
     getStateVariables() const{
         return w;
@@ -137,7 +127,7 @@ public:
 protected:
     // Assemble the mass and stiffness matrices.
     void
-    assemble_matrices();
+    assemble_system();
 
     // Solve the linear system associated to the tangent problem.
     void
@@ -248,7 +238,7 @@ protected:
     }
 
     // Tau w minus
-    double tau_v_minus(double u){
+    double tau_w_minus(double u){
         return tau_w1_minus + (tau_w2_minus - tau_w1_minus) * (1 + std::tanh(k_w_minus * (u - u_w_minus))) / 2;
     }
 
@@ -286,7 +276,7 @@ protected:
 
     // J so
     double J_so(double u){
-        return (u - u_0) * (1 - H(u - theta_w)) / tau_o(u) + H(u - theta_w) / t_so(u);
+        return (u - u_0) * (1 - H(u - theta_w)) / tau_o(u) + H(u - theta_w) / tau_so(u);
     }
 
     // J si
@@ -342,6 +332,9 @@ protected:
 
     // Right-hand side vector in the linear system.
     TrilinosWrappers::MPI::Vector residual_vector;
+
+    // Increment of the solution between Newton iterations.
+    TrilinosWrappers::MPI::Vector delta_owned;
 
     // System solution (without ghost elements).
     TrilinosWrappers::MPI::Vector solution_owned;
