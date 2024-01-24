@@ -88,6 +88,7 @@ public:
             , deltat(deltat_)
             , theta(theta_)
             , mesh(MPI_COMM_WORLD)
+            , time_step(0)
     {}
 
     // Initialization.
@@ -138,17 +139,17 @@ protected:
     void
     assemble_matrices();
 
-    // Assemble the right-hand side of the problem.
+    // Solve the linear system associated to the tangent problem.
     void
-    assemble_rhs(const double &time);
+    solve_linear_system();
 
-    // Solve the problem for one time step.
+    // Solve the problem for one time step using Newton's method.
     void
-    solve_time_step();
+    solve_newton();
 
     // Output.
     void
-    output(const unsigned int &time_step) const;
+    output() const;
 
     // MPI parallel. /////////////////////////////////////////////////////////////
 
@@ -312,6 +313,9 @@ protected:
     // Current time
     double time;
 
+    // Time step
+    int time_step;
+
     // Theta parameter of the theta method.
     const double theta;
 
@@ -333,17 +337,8 @@ protected:
     // DoFs relevant to the current process (including ghost DoFs).
     IndexSet locally_relevant_dofs;
 
-    // Mass matrix M / deltat.
-    TrilinosWrappers::SparseMatrix mass_matrix;
-
-    // Stiffness matrix A.
-    TrilinosWrappers::SparseMatrix stiffness_matrix;
-
     // Matrix on the left-hand side (M / deltat + theta A).
     TrilinosWrappers::SparseMatrix lhs_matrix;
-
-    // Matrix on the right-hand side (M / deltat - (1 - theta) A).
-    TrilinosWrappers::SparseMatrix rhs_matrix;
 
     // Right-hand side vector in the linear system.
     TrilinosWrappers::MPI::Vector residual_vector;
@@ -358,9 +353,6 @@ protected:
     TrilinosWrappers::MPI::Vector solution_old;
 
 };
-
-
-
 
 
 #endif //NMPDE_PROJECT4_CESARONI_TONARELLI_TRABACCHIN_MONODOMAINSOLVER_H

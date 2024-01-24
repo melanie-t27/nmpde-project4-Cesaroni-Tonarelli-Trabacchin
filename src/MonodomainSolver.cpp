@@ -4,7 +4,8 @@
 #include "MonodomainSolver.h"
 
 void
-MonodomainSolver::setup(){
+MonodomainSolver::setup()
+{
     // Create the mesh.
     {
         pcout << "Initializing the mesh" << std::endl;
@@ -100,8 +101,7 @@ MonodomainSolver::assemble_matrices()
                             update_values | update_gradients |
                             update_quadrature_points | update_JxW_values);
 
-    FullMatrix<double> cell_mass_matrix(dofs_per_cell, dofs_per_cell);
-    FullMatrix<double> cell_stiffness_matrix(dofs_per_cell, dofs_per_cell);
+    FullMatrix<double> cell_matrix(dofs_per_cell, dofs_per_cell);
     Vector<double>     cell_residual(dofs_per_cell);
 
 
@@ -127,8 +127,7 @@ MonodomainSolver::assemble_matrices()
 
         fe_values.reinit(cell);
 
-        cell_mass_matrix      = 0.0;
-        cell_stiffness_matrix = 0.0;
+        cell_matrix      = 0.0;
         cell_residual = 0.0;
 
         fe_values.get_function_values(solution, solution_loc);
@@ -143,20 +142,20 @@ MonodomainSolver::assemble_matrices()
                 for (unsigned int j = 0; j < dofs_per_cell; ++j)
                 {
                     // mass matrix
-                    cell_mass_matrix(i, j) += fe_values.shape_value(i, q) *
+                    cell_matrix(i, j) += fe_values.shape_value(i, q) *
                                               fe_values.shape_value(j, q) /
                                               deltat * fe_values.JxW(q);
 
                     // diffusion term
-                    cell_stiffness_matrix(i, j) += diffusion_matrix * theta *
+                    cell_matrix(i, j) += diffusion_matrix * theta *
                                                     fe_values.shape_grad(j, q) *
                                                     fe_values.shape_grad(i, q) *
                                                     fe_values.JxW(q);
 
                     // J ion term
-                    cell_stiffness_matrix(i,j) -= 1 / h *
-                            (J_ion(theta*solution_loc[q] + 2 * theta*  h * fe_values.shape_value(j, q) + (1-theta) * solution_old_loc[q])
-                                - J_ion(solution_loc[q] - 2 * theta* h * fe_values.shape_value(j, q) + (1-theta) * solution_old_loc[q]))
+                    cell_matrix(i,j) -= 1 / h *
+                            ( J_ion(theta * ( solution_loc[q] + 2 * h * fe_values.shape_value(j, q)) + (1-theta) * solution_old_loc[q])
+                                - J_ion( theta * (solution_loc[q] - 2 * h * fe_values.shape_value(j, q)) + (1-theta) * solution_old_loc[q]))
                             * fe_values.shape_value(i, q) / 2 * fe_values.JxW(q);
                 }
 
@@ -171,12 +170,12 @@ MonodomainSolver::assemble_matrices()
                 cell_residual(i) -= diffusion_matrix * theta * solution_gradient_loc[q]
                                         * fe_values.shape_grad(i, q) * fe_values.JxW(q);
 
-                cell_residual(i) -= diffusion_matrix * (1-theta) * solution_old_gradient_loc[q]
+                cell_residual(i) -= diffusion_matrix * (1 - theta) * solution_old_gradient_loc[q]
                                         * fe_values.shape_grad(i, q) * fe_values.JxW(q);
 
                 // J ion term
-                cell_residual(i) += J_ion(theta*solution_loc[q] + (1-theta)*solution_old_loc[q])*fe_values.shape_value(i,q)
-                                        *fe_values.JxW(q);
+                cell_residual(i) += J_ion( theta * solution_loc[q] + (1 - theta) * solution_old_loc[q]) *
+                                        fe_values.shape_value(i,q) * fe_values.JxW(q);
 
                 // Forcing term
                 j_app.set_time(getCurrentTime());
@@ -184,24 +183,102 @@ MonodomainSolver::assemble_matrices()
 
                 j_app.set_time(getCurrentTime() - deltat);
                 cell_residual(i) += (1-theta) * j_app.value(fe_values.shape_value(i, q)) * fe_values.JxW(q);
+
                 j_app.set_time(getCurrentTime());
             }
         }
 
         cell->get_dof_indices(dof_indices);
 
-        mass_matrix.add(dof_indices, cell_mass_matrix);
-        stiffness_matrix.add(dof_indices, cell_stiffness_matrix);
+        lhs_matrix.add(dof_indices, cell_matrix);
         residual_vector.add(dof_indices, cell_residual);
     }
-    mass_matrix.compress(VectorOperation::add);
-    stiffness_matrix.compress(VectorOperation::add);
+    lhs_matrix.compress(VectorOperation::add);
     residual_vector.compress(VectorOperation::add);
+}
 
-    // We build the matrix on the left-hand side of the algebraic problem (the one
-    // that we'll invert at each timestep).
-    lhs_matrix.copy_from(mass_matrix);
-    lhs_matrix.add(1, stiffness_matrix);
+void
+MonodomainSolver::solve_linear_system()
+{
+    SolverControl solver_control(1000, 1e-6 * residual_vector.l2_norm());
 
+    SolverCG<TrilinosWrappers::MPI::Vector> solver(solver_control);
+    TrilinosWrappers::PreconditionSSOR      preconditioner;
+    preconditioner.initialize(
+            lhs_matrix, TrilinosWrappers::PreconditionSSOR::AdditionalData(1.0));
 
+    solver.solve(lhs_matrix, delta_owned, residual_vector, preconditioner);
+    pcout << "  " << solver_control.last_step() << " iterations" << std::endl;
+}
+
+void
+MonodomainSolver::solve_newton()
+{
+    const unsigned int n_max_iters        = 1000;
+    const double       residual_tolerance = 1e-6;
+
+    unsigned int n_iter        = 0;
+    double       residual_norm = residual_tolerance + 1;
+
+    while (n_iter < n_max_iters && residual_norm > residual_tolerance)
+    {
+        assemble_system();
+        residual_norm = residual_vector.l2_norm();
+
+        pcout << "  Newton iteration " << n_iter << "/" << n_max_iters
+              << " - ||r|| = " << std::scientific << std::setprecision(6)
+              << residual_norm << std::flush;
+
+        // We actually solve the system only if the residual is larger than the
+        // tolerance.
+        if (residual_norm > residual_tolerance)
+        {
+            solve_linear_system();
+
+            solution_owned += delta_owned;
+            solution = solution_owned;
+        }
+        else
+        {
+            pcout << " < tolerance" << std::endl;
+        }
+
+        ++n_iter;
+    }
+}
+
+void
+MonodomainSolver::output() const
+{
+    DataOut<dim> data_out;
+    data_out.add_data_vector(dof_handler, solution, "u");
+
+    std::vector<unsigned int> partition_int(mesh.n_active_cells());
+    GridTools::get_subdomain_association(mesh, partition_int);
+    const Vector<double> partitioning(partition_int.begin(), partition_int.end());
+    data_out.add_data_vector(partitioning, "partitioning");
+
+    data_out.build_patches();
+
+    data_out.write_vtu_with_pvtu_record(
+            "./", "output", time_step, MPI_COMM_WORLD, 3);
+}
+
+void
+MonodomainSolver::solve()
+{
+    pcout << "===============================================" << std::endl;
+    time += deltat;
+    ++time_step;
+
+    // Store the old solution, so that it is available for assembly.
+    solution_old = solution;
+
+    pcout << "n = " << std::setw(3) << time_step << ", t = " << std::setw(5)
+        << std::fixed << time << std::endl;
+
+    // we invoke Newton's method to solve the non-linear problem.
+    solve_newton();
+    output();
+    pcout << std::endl;
 }
