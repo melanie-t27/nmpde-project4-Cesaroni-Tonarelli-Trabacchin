@@ -68,7 +68,7 @@ private:
   // Stiffness matrix K.
   TrilinosWrappers::SparseMatrix stiffness_matrix;
 
-    TrilinosWrappers::SparseMatrix Z_matrix;
+  TrilinosWrappers::SparseMatrix Z_matrix;
 
 
   // Matrix on the left-hand side (M / deltat + theta A).

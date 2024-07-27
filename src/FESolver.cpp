@@ -102,6 +102,65 @@ void FESolver::assemble_matrices() {
 
 }
 
+
+void FESolver::assemble_Z_matrix() {
+  pcout << "===============================================" << std::endl;
+    pcout << "Assembling the Z matrix" << std::endl;
+
+    const unsigned int dofs_per_cell = fe->dofs_per_cell;
+    const unsigned int n_q           = quadrature->size();
+
+    FEValues<dim> fe_values(*fe,
+                          *quadrature,
+                          update_values | update_gradients |
+                            update_quadrature_points | update_JxW_values);
+
+
+
+    std::vector<types::global_dof_index> dof_indices(dofs_per_cell);
+
+    FullMatrix<double> cell_Z_matrix(dofs_per_cell, dofs_per_cell);
+    Z_matrix = 0.0;
+
+    for (const auto &cell : dof_handler.active_cell_iterators())
+    {
+      if (!cell->is_locally_owned())
+        continue;
+
+      fe_values.reinit(cell);
+
+      cell_Z_matrix = 0.0;
+
+      for (unsigned int q = 0; q < n_q; ++q)
+        {
+          // Evaluate coefficients on this quadrature node.
+          const double D_loc = D.value(fe_values.quadrature_point(q));//D is yet to be defined, also it is a tensor not a scalar
+
+          for (unsigned int i = 0; i < dofs_per_cell; ++i)
+            {
+              for (unsigned int j = 0; j < dofs_per_cell; ++j)
+                {
+                    cell_Z_matrix(i,j) += solver.getImplicitCoefficient(cell->active_cell_index(), q) * fe_values.shape_value(i, q) * fe_values.shape_value(j, q) * fe_values.JxW(q);
+                }
+            }
+        }
+
+      cell->get_dof_indices(dof_indices);
+
+      Z_matrix.add(dof_indices, cell_Z_matrix);
+    }
+
+  Z_matrix.compress(VectorOperation::add);
+
+  // We build the matrix on the left-hand side of the algebraic problem (the one
+  // that we'll invert at each timestep).
+  lhs_matrix.copy_from(mass_matrix);
+  lhs_matrix.add(theta, stiffness_matrix);
+  lhs_matrix.add(1.0, Z_matrix);
+}
+
+
+
 void FESolver::assemble_rhs(const double time) {
 
   const unsigned int dofs_per_cell = fe->dofs_per_cell;
@@ -162,8 +221,10 @@ void FESolver::assemble_rhs(const double time) {
 }
 
 void
-FESolver::solve_time_step()
+FESolver::solve_time_step(double time, unsigned int time_step)
 {
+  assemble_Z_matrix();
+  assemble_rhs(time);
   SolverControl solver_control(1000, 1e-6 * system_rhs.l2_norm());
 
   SolverCG<TrilinosWrappers::MPI::Vector> solver(solver_control);
@@ -175,4 +236,13 @@ FESolver::solve_time_step()
   pcout << "  " << solver_control.last_step() << " CG iterations" << std::endl;
 
   solution = solution_owned;
+}
+
+void FESolver::setup() {
+  //......
+  assemble_matrices();
+  VectorTools::interpolate(dof_handler, u_0, solution_owned);
+  solution = solution_owned;
+
+
 }

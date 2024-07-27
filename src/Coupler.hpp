@@ -29,7 +29,7 @@
 template<int K_ode, int K_ion, int N_ion>
 class Coupler {
 public:
-    virtual std::vector<double> from_fe_to_ode(Solver<K_ode, K_ion, N_ion>& solver);
-    virtual std::vector<double> from_ode_to_fe(Solver<K_ode, K_ion, N_ion>& solver);
+    virtual std::vector<double>& from_fe_to_ode(Solver<K_ode, K_ion, N_ion>& solver);
+    virtual void from_ode_to_fe(Solver<K_ode, K_ion, N_ion>& solver);
 };
 #endif
