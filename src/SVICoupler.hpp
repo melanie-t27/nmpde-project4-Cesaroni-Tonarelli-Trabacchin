@@ -4,20 +4,21 @@
 #include <vector>
 
 #include "Coupler.hpp"
-#include "Solver.hpp"
+//#include "Solver.hpp"
+#include "utils.hpp"
 template<int K_ode, int K_ion, int N_ion>
 class SVICoupler : public Coupler<K_ode, K_ion, N_ion> {
     static constexpr unsigned int dim = 3; 
 public:
-    std::vector<double>& from_fe_to_ode(Solver<K_ode, K_ion, N_ion>& solver) override {
-        return solver.getSol();
+    std::vector<double>& from_fe_to_ode(std::unique_ptr<Solver<K_ode, K_ion, N_ion>> solver) override {
+        return solver->getSol();
     }
-    void from_ode_to_fe(Solver<K_ode, K_ion, N_ion>& solver) override {
-        std::unique_ptr<FiniteElement<dim>> fe = solver.getFiniteElement();
-        std::unique_ptr<Quadrature<dim>> quadrature = solver.getQuadrature();
+    void from_ode_to_fe(std::unique_pts<Solver<K_ode, K_ion, N_ion>> solver) override {
+        std::unique_ptr<FiniteElement<dim>> fe = solver->getFiniteElement();
+        std::unique_ptr<Quadrature<dim>> quadrature = solver->getQuadrature();
         FEValues<dim>  fe_values(*fe,*quadrature,update_values | update_gradients | update_quadrature_points | update_JxW_values);
-        DofHandler<dim>& dofHandler = solver.getDofhandler();
-        std::unique_ptr<IonicModel> ionicModel = solver.getIonicModel();
+        DofHandler<dim>& dofHandler = solver->getDofhandler();
+        std::unique_ptr<IonicModel> ionicModel = solver->getIonicModel();
         const unsigned int dofs_per_cell = fe->dofs_per_cell;
         const unsigned int n_q           = quadrature->size();
         std::array<double, N_ion + 1> interpolated_values;
@@ -36,10 +37,10 @@ public:
                 for (unsigned int i = 0; i < fe.dofs_per_cell; ++i)
                 {
                     for(int j = 0; j < N_ion; j++) {
-                        interpolated_values[j] += solver.getGatingVars()[local_dof_indices[i]].get(j) * fe_values.shape_value(i, q);
+                        interpolated_values[j] += solver->getGatingVars()[local_dof_indices[i]].get(j) * fe_values.shape_value(i, q);
                     }
 
-                    interpolated_values[N_ion] += solver.getSol(0)[local_dof_indices[i]] * fe_values.shape_value(i, q);
+                    interpolated_values[N_ion] += solver->getSol(0)[local_dof_indices[i]] * fe_values.shape_value(i, q);
 
                     
                 }
@@ -66,6 +67,8 @@ public:
             history.pop_back();
         }
     }
+
+    ~SVICoupler{};
 private:
     std::deque<std::vector<double>> history;// defined over quadrature nodes
 };

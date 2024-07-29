@@ -1,6 +1,9 @@
 #include "FESolver.hpp"
-
-void FESolver::setup() {
+#include "utils.hpp"
+#include "Solver.hpp"
+using namespace dealii;
+template <int K_ode, int K_ion, int N_ion>
+void FESolver<K_ode, K_ion, N_ion>::setup() {
     pcout << "Initializing the linear system" << std::endl;
 
     pcout << "  Initializing the sparsity pattern" << std::endl;
@@ -22,8 +25,8 @@ void FESolver::setup() {
     solution_owned.reinit(locally_owned_dofs, MPI_COMM_WORLD);
     solution.reinit(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
 }
-
-void FESolver::assemble_matrices() {
+template <int K_ode, int K_ion, int N_ion>
+void FESolver<K_ode, K_ion, N_ion>::assemble_matrices() {
     pcout << "===============================================" << std::endl;
     pcout << "Assembling the system matrices" << std::endl;
 
@@ -59,7 +62,7 @@ void FESolver::assemble_matrices() {
       for (unsigned int q = 0; q < n_q; ++q)
         {
           // Evaluate coefficients on this quadrature node.
-          const double D_loc = D.value(fe_values.quadrature_point(q));//D is yet to be defined, also it is a tensor not a scalar
+          const double D_loc = d.value(fe_values.quadrature_point(q));//D is yet to be defined, also it is a tensor not a scalar
 
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
             {
@@ -102,8 +105,8 @@ void FESolver::assemble_matrices() {
 
 }
 
-
-void FESolver::assemble_Z_matrix() {
+template <int K_ode, int K_ion, int N_ion>
+void FESolver<K_ode, K_ion, N_ion>::assemble_Z_matrix() {
   pcout << "===============================================" << std::endl;
     pcout << "Assembling the Z matrix" << std::endl;
 
@@ -134,7 +137,7 @@ void FESolver::assemble_Z_matrix() {
       for (unsigned int q = 0; q < n_q; ++q)
         {
           // Evaluate coefficients on this quadrature node.
-          const double D_loc = D.value(fe_values.quadrature_point(q));//D is yet to be defined, also it is a tensor not a scalar
+          const double D_loc = d.value(fe_values.quadrature_point(q));//D is yet to be defined, also it is a tensor not a scalar
 
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
             {
@@ -160,8 +163,8 @@ void FESolver::assemble_Z_matrix() {
 }
 
 
-
-void FESolver::assemble_rhs(const double time) {
+template <int K_ode, int K_ion, int N_ion>
+void FESolver<K_ode, K_ion, N_ion>::assemble_rhs(const double time) {
 
   const unsigned int dofs_per_cell = fe->dofs_per_cell;
   const unsigned int n_q           = quadrature->size();
@@ -219,10 +222,11 @@ void FESolver::assemble_rhs(const double time) {
   rhs_matrix.vmult_add(system_rhs, solution_owned);
 
 }
-
+template <int K_ode, int K_ion, int N_ion>
 void
-FESolver::solve_time_step(double time, unsigned int time_step)
+FESolver<K_ode, K_ion, N_ion>::solve_time_step(double time, unsigned int time_step)
 {
+    I_app.set_time(time);
   assemble_Z_matrix();
   assemble_rhs(time);
   SolverControl solver_control(1000, 1e-6 * system_rhs.l2_norm());
@@ -237,12 +241,12 @@ FESolver::solve_time_step(double time, unsigned int time_step)
 
   solution = solution_owned;
 }
-
-void FESolver::setup() {
+/*template <int K_ode, int K_ion, int N_ion>
+void FESolver<K_ode, K_ion, N_ion>::setup() {
   //......
   assemble_matrices();
   VectorTools::interpolate(dof_handler, u_0, solution_owned);
   solution = solution_owned;
 
 
-}
+}*/

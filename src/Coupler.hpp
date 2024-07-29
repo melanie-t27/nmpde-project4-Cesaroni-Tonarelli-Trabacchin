@@ -25,11 +25,18 @@
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/vector_tools.h>
 #include <vector>
-#include "Solver.hpp"
+//#include "Solver.hpp"
+#include "utils.hpp"
+
+using namespace dealii;
+template<int K_ode, int K_ion, int N_ion>
+class Solver;
 template<int K_ode, int K_ion, int N_ion>
 class Coupler {
 public:
-    virtual std::vector<double>& from_fe_to_ode(Solver<K_ode, K_ion, N_ion>& solver);
-    virtual void from_ode_to_fe(Solver<K_ode, K_ion, N_ion>& solver);
+    virtual std::vector<double>& from_fe_to_ode(std::unique_ptr<Solver<K_ode, K_ion, N_ion>> solver);
+    virtual void from_ode_to_fe(std::unique_ptr<Solver<K_ode, K_ion, N_ion>> solver);
+
+    virtual ~Coupler();
 };
 #endif

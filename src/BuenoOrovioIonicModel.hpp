@@ -1,6 +1,7 @@
 #ifndef BUENO_OROVIO_IONIC_MODEL_H
 #define BUENO_OROVIO_IONIC_MODEL_H
 #include "IonicModel.hpp"
+#include "utils.hpp"
 #include <cmath>
 #include <tuple>
 
@@ -52,6 +53,8 @@ public:
         } else {
             assert(false);
         }
+
+        virtual ~BuenoOrovioIonicModel();
     }
 
     

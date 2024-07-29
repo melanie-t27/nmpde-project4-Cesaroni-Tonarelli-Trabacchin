@@ -1,42 +1,39 @@
 #ifndef SOLVER_H
 #define SOLVER_H
 
-#include <deal.II/base/conditional_ostream.h>
-#include <deal.II/base/quadrature_lib.h>
-#include <deal.II/base/tensor_function.h>
-
-#include <deal.II/distributed/fully_distributed_tria.h>
-
-#include <deal.II/dofs/dof_handler.h>
-#include <deal.II/dofs/dof_tools.h>
-
-#include <deal.II/fe/fe_simplex_p.h>
-#include <deal.II/fe/fe_system.h>
-#include <deal.II/fe/fe_values.h>
-#include <deal.II/fe/fe_values_extractors.h>
-
-#include <deal.II/grid/grid_in.h>
-
-#include <deal.II/lac/solver_cg.h>
-#include <deal.II/lac/trilinos_precondition.h>
-#include <deal.II/lac/trilinos_sparse_matrix.h>
-
-#include <deal.II/numerics/data_out.h>
-#include <deal.II/numerics/matrix_tools.h>
-#include <deal.II/numerics/vector_tools.h>
-
-
 #include "IonicModel.hpp"
 #include "Coupler.hpp"
+#include "utils.hpp"
+#include "ODESolver.hpp"
+#include "FESolver.hpp"
 #include <deque>
+using namespace dealii;
 
 
 
 template<int K_ode, int K_ion, int N_ion>
 class Solver {
         static constexpr unsigned int dim = 3;
-public:
 
+public:
+    Solver( const std::string &mesh_file_name_,
+         const unsigned int &r_,
+         const double       &T_,
+         const double       &deltat_,
+         const double       &fe_theta_,
+         const double       &ode_theta_)
+            : mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD))
+            , mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD))
+            , pcout(std::cout, mpi_rank == 0)
+            , T(T_)
+            , mesh_file_name(mesh_file_name_)
+            , r(r_)
+            , deltat(deltat_)
+            , fe_theta(fe_theta_)
+            , ode_theta(ode_theta_)
+            , mesh(MPI_COMM_WORLD)
+            , fe_solver(mesh_file_name_, r_, T_, deltat_, fe_theta_)
+    {}
     void notify_FE_ready(TrilinosWrappers::MPI::Vector solution) {
 
     }
@@ -53,16 +50,16 @@ public:
         return explicit_coefficients[cell_index * quadrature->size() + q];
     }
 
-    std::vector<double>& getLastSolution() const {
-        return sol[sol.size() - 1];
+    std::vector<double>& getLastSolution() {
+        return u[u.size() - 1];
     }
 
-    void update_ode_input() {
-        u_ode.emplace_front(sol[sol.size() - 1]);
+   /* void update_ode_input() {
+        u_ode.emplace_front(u[u.size() - 1]);
         if(v.size() >= K_ode) {
             u_ode.pop_back();
         }
-    }
+    }*/
 
     std::unique_ptr<FiniteElement<dim>> getFiniteElement() {
         return fe;
@@ -72,7 +69,7 @@ public:
         return quadrature;
     }
 
-    DofHandler<dim>& getDofHandler() {
+    DoFHandler<dim>& getDofHandler() {
         return dof_handler;
     }
 
@@ -86,7 +83,7 @@ public:
         return dof_handler.active_cell_iterators();
     }*/
 
-    auto const & getGateingVars() {
+    auto const & getGatingVars() {
         return gate_vars;
     }
 
@@ -95,7 +92,7 @@ public:
     }
 
     int getSolSize() {
-        return sol.size();
+        return u.size();
     }
 
     auto getIonicModel() {
@@ -147,34 +144,58 @@ public:
 
 
 private:
+
+
+    // Number of MPI processes.
+    const unsigned int mpi_size;
+
+    // This MPI process.
+    const unsigned int mpi_rank;
+
+    // Parallel output stream.
+    ConditionalOStream pcout;
+
+    double T;
+
+    const std::string mesh_file_name;
+
+    unsigned int r;
+
+    double deltat;
+
+    double fe_theta;
+
+    double ode_theta;
+
+
+
+
     std::unique_ptr<FiniteElement<dim>> fe;
 
     std::unique_ptr<Quadrature<dim>> quadrature;
 
-    std::unique_ptr<IonicModel<K_ion>> ionic_model;
+    std::unique_ptr<IonicModel<K_ion,N_ion>> ionic_model;
 
-    std::unique_ptr<Coupler> coupler;
+    std::unique_ptr<Coupler<K_ode, K_ion, N_ion>> coupler;
 
-    std::unique_ptr<ODESolver> ode_solver;
+    std::unique_ptr<ODESolver<K_ode, K_ion, N_ion>> ode_solver;
 
     parallel::fullydistributed::Triangulation<dim> mesh;
+
+    FESolver<K_ode, K_ion, N_ion> fe_solver;
 
 
     DoFHandler<dim> dof_handler;
 
-    double deltat;
+
 
     double time;
 
     unsigned int time_step;
 
-    double T;
 
-    unsigned int r;
 
-    double fe_theta;
 
-    double ode_theta;
 
 
 
