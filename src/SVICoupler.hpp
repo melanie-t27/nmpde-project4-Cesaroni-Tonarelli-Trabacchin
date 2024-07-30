@@ -5,6 +5,7 @@
 #include "Coupler.hpp"
 //#include "Solver.hpp"
 #include "utils.hpp"
+#include <cstring>
 
 template<int K_ode, int K_ion, int N_ion>
 class SVICoupler : public Coupler<K_ode, K_ion, N_ion> {
@@ -25,10 +26,9 @@ public:
         const unsigned int dofs_per_cell = fe->dofs_per_cell;
         const unsigned int n_q           = quadrature->size();
         std::array<double, N_ion + 1> interpolated_values;
-        std::vector<types::global_dof_index> local_dof_indices(fe->n_dofs_per_cell());
+        memset(&interpolated_values, 0, sizeof(int) * (N_ion + 1));
+        std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
         std::array<double, K_ion> history_u;
-       //cell->get_dof_indices(local_dof_indices);
-
         std::vector<double> new_history_item;
         new_history_item.resize(solver->getMesh().n_locally_owned_active_cells() * n_q);
         for(const auto &cell : dofHandler.active_cell_iterators()) {
@@ -37,7 +37,7 @@ public:
             fe_values.reinit(cell);
 
             for(unsigned int q = 0; q < n_q; q++) {
-                for (unsigned int i = 0; i < fe->n_dofs_per_cell(); ++i)
+                for (unsigned int i = 0; i < dofs_per_cell; ++i)
                 {
                     for(int j = 0; j < N_ion; j++) {
                         interpolated_values[j] += solver->getGatingVars()[local_dof_indices[i]].get(j) * fe_values.shape_value(i, q);

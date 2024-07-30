@@ -38,6 +38,8 @@ public:
     virtual std::vector<double>& from_fe_to_ode(std::shared_ptr<Solver<K_ode, K_ion, N_ion>> solver);
     virtual void from_ode_to_fe(std::shared_ptr<Solver<K_ode, K_ion, N_ion>> solver);
 
-    virtual ~Coupler();
+    virtual ~Coupler() {
+
+    }
 };
 #endif

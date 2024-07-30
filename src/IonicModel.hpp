@@ -17,6 +17,8 @@ public:
     /*virtual double implicit_coefficient(std::array<double, K> u, double v, double w, double s);
     virtual double explicit_coefficient(std::array<double, K> u, double v, double w, double s);*/
 
-    virtual ~IonicModel();
+    virtual ~IonicModel() {
+
+    }
 };
 #endif

@@ -9,7 +9,7 @@ template<int K_ion, int N_ion>
 class BuenoOrovioIonicModel : public IonicModel<K_ion, N_ion> {
 public:
 
-   double getDerivative(int index, double u, GatingVariables<N_ion> vars) {
+   double getDerivative(int index, double u, GatingVariables<N_ion> vars) override{
         if(index == 0) {
             return ((1 - H(u - theta_v))*(v_inf(u) - vars.get(0))) / (tau_v_minus(u)) - ((H(u - theta_v))*vars.get(0))/(tau_v_plus);
         } else if(index == 1) {
@@ -22,7 +22,7 @@ public:
     }
 
     //first is implicit, second is explicit
-    std::tuple<double, double> getExpansionCoefficients(int index, double u) {
+    std::tuple<double, double> getExpansionCoefficients(int index, double u) override{
         double A,B;
         if(index == 0) {
             A = (1 - H(u - theta_v))/tau_v_minus(u);
@@ -41,7 +41,14 @@ public:
         }
     }
 
-    virtual ~BuenoOrovioIonicModel();
+    virtual double implicit_coefficient(const std::array<double, K_ion>& u, size_t valid_u, GatingVariables<N_ion>& vars) override;
+    virtual double explicit_coefficient(const std::array<double, K_ion>& u, size_t valid_u, GatingVariables<N_ion>& vars) override;
+
+
+
+    virtual ~BuenoOrovioIonicModel()  override {
+
+    }
 
 protected:
     const double u_0 = 0;

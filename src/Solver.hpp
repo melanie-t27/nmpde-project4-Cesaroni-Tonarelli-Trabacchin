@@ -161,16 +161,12 @@ public:
 
 
 private:
-
-    // Number of MPI processes.
     const unsigned int mpi_size;
 
-    // This MPI process.
     const unsigned int mpi_rank;
 
-    // Parallel output stream.
     ConditionalOStream pcout;
-
+    
     double T;
 
     const std::string mesh_file_name;
@@ -183,9 +179,13 @@ private:
 
     double ode_theta;
 
-    std::shared_ptr<FiniteElement<dim>> fe;
 
-    std::shared_ptr<Quadrature<dim>> quadrature;
+
+    parallel::fullydistributed::Triangulation<dim> mesh;
+
+    FESolver<K_ode, K_ion, N_ion> fe_solver;
+
+    std::shared_ptr<FiniteElement<dim>> fe;
 
     std::shared_ptr<IonicModel<K_ion,N_ion>> ionic_model;
 
@@ -193,9 +193,13 @@ private:
 
     ODESolver<K_ode, K_ion, N_ion> ode_solver;
 
-    parallel::fullydistributed::Triangulation<dim> mesh;
+    std::shared_ptr<Quadrature<dim>> quadrature;
 
-    FESolver<K_ode, K_ion, N_ion> fe_solver;
+    
+    
+
+    
+
 
     DoFHandler<dim> dof_handler;
 

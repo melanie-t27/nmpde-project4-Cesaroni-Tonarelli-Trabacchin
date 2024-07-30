@@ -19,7 +19,7 @@ public:
                 - this->H(u[0] - this->theta_w) * vars.get(1) * vars.get(2) / this->tau_si;
     }
 
-    ~BuenoOrovioIonicModelIon1(){}
+    ~BuenoOrovioIonicModelIon1() override{}
 
 };
 
