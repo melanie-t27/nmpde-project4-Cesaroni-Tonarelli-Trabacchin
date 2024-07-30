@@ -1,15 +1,16 @@
 #include "FESolver.hpp"
 #include "utils.hpp"
 #include "Solver.hpp"
+
 using namespace dealii;
+
 template <int K_ode, int K_ion, int N_ion>
 void FESolver<K_ode, K_ion, N_ion>::setup() {
     pcout << "Initializing the linear system" << std::endl;
 
     pcout << "  Initializing the sparsity pattern" << std::endl;
 
-    TrilinosWrappers::SparsityPattern sparsity(locally_owned_dofs,
-                                               MPI_COMM_WORLD);
+    TrilinosWrappers::SparsityPattern sparsity(locally_owned_dofs, MPI_COMM_WORLD);
     DoFTools::make_sparsity_pattern(dof_handler, sparsity);
     sparsity.compress();
 
@@ -25,6 +26,8 @@ void FESolver<K_ode, K_ion, N_ion>::setup() {
     solution_owned.reinit(locally_owned_dofs, MPI_COMM_WORLD);
     solution.reinit(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
 }
+
+
 template <int K_ode, int K_ion, int N_ion>
 void FESolver<K_ode, K_ion, N_ion>::assemble_matrices() {
     pcout << "===============================================" << std::endl;
@@ -105,6 +108,7 @@ void FESolver<K_ode, K_ion, N_ion>::assemble_matrices() {
 
 }
 
+
 template <int K_ode, int K_ion, int N_ion>
 void FESolver<K_ode, K_ion, N_ion>::assemble_Z_matrix() {
   pcout << "===============================================" << std::endl;
@@ -137,7 +141,7 @@ void FESolver<K_ode, K_ion, N_ion>::assemble_Z_matrix() {
       for (unsigned int q = 0; q < n_q; ++q)
         {
           // Evaluate coefficients on this quadrature node.
-          const double D_loc = d.value(fe_values.quadrature_point(q));//D is yet to be defined, also it is a tensor not a scalar
+          const double D_loc = d.value(fe_values.quadrature_point(q));
 
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
             {
@@ -222,25 +226,46 @@ void FESolver<K_ode, K_ion, N_ion>::assemble_rhs(const double time) {
   rhs_matrix.vmult_add(system_rhs, solution_owned);
 
 }
+
+
 template <int K_ode, int K_ion, int N_ion>
 void
 FESolver<K_ode, K_ion, N_ion>::solve_time_step(double time, unsigned int time_step)
 {
-    I_app.set_time(time);
+  I_app.set_time(time);
   assemble_Z_matrix();
   assemble_rhs(time);
   SolverControl solver_control(1000, 1e-6 * system_rhs.l2_norm());
 
-  SolverCG<TrilinosWrappers::MPI::Vector> solver(solver_control);
+  SolverCG<TrilinosWrappers::MPI::Vector> solver_ls(solver_control);
   TrilinosWrappers::PreconditionILU      preconditioner;
-  preconditioner.initialize(
-    lhs_matrix, TrilinosWrappers::PreconditionILU::AdditionalData(0,0.0,1.0,0));
+  preconditioner.initialize(lhs_matrix, TrilinosWrappers::PreconditionILU::AdditionalData(0,0.0,1.0,0));
 
-  solver.solve(lhs_matrix, solution_owned, system_rhs, preconditioner);
+  solver_ls.solve(lhs_matrix, solution_owned, system_rhs, preconditioner);
   pcout << "  " << solver_control.last_step() << " CG iterations" << std::endl;
-
+  solver->setFESolution(solution_owned);
   solution = solution_owned;
 }
+
+template <int K_ode, int K_ion, int N_ion>
+void
+FESolver<K_ode, K_ion, N_ion>::output(const unsigned int &time_step) const
+{
+  DataOut<dim> data_out;
+  data_out.add_data_vector(dof_handler, solution, "u");
+  
+  std::vector<unsigned int> partition_int(mesh.n_active_cells());
+  GridTools::get_subdomain_association(mesh, partition_int);
+  const Vector<double> partitioning(partition_int.begin(), partition_int.end());
+  data_out.add_data_vector(partitioning, "partitioning");
+
+  data_out.build_patches();
+
+  data_out.write_vtu_with_pvtu_record(
+    "./", "output", time_step, MPI_COMM_WORLD, 3);
+}
+
+
 /*template <int K_ode, int K_ion, int N_ion>
 void FESolver<K_ode, K_ion, N_ion>::setup() {
   //......

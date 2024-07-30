@@ -5,30 +5,15 @@
 #include <cmath>
 #include <tuple>
 
-template<int K, int N>
-class BuenoOrovioIonicModel : public IonicModel<K, N> {
+template<int K_ion, int N_ion>
+class BuenoOrovioIonicModel : public IonicModel<K_ion, N_ion> {
 public:
-    /*double dv(double u, double v, double w, double s) override {
-        return ((1 - H(u - theta_v))*(v_inf - v)) / (tau_v_minus(u)) - ((H(u - theta_v))*v)/(tau_v_plus);
-    }
 
-    double dw(double u, double v, double w, double s) override {
-        return ((1 - H(u - theta_w))*(w_inf - w))/(tau_w_minus(u)) - (H(u - theta_w)*w)/(tau_w_plus);
-    }
-
-    double ds(double u, double v, double w, double s) override {
-        return 1/tau_s(u) * ((1+std::tanh(k_s * (u - u_s)))/2 - s);
-    }
-    virtual double implicit_coefficient(std::array<double, K> u, double v, double w, double s) override;
-    virtual double explicit_coefficient(std::array<double, K> u, double v, double w, double s) override;
-    */
-
-
-   double getDerivative(int index, double u, GatingVariables<N> vars) {
+   double getDerivative(int index, double u, GatingVariables<N_ion> vars) {
         if(index == 0) {
-            return ((1 - H(u - theta_v))*(v_inf - vars.get(0))) / (tau_v_minus(u)) - ((H(u - theta_v))*vars.get(0))/(tau_v_plus);
+            return ((1 - H(u - theta_v))*(v_inf(u) - vars.get(0))) / (tau_v_minus(u)) - ((H(u - theta_v))*vars.get(0))/(tau_v_plus);
         } else if(index == 1) {
-            return ((1 - H(u - theta_w))*(w_inf - vars.get(1)))/(tau_w_minus(u)) - (H(u - theta_w)*vars.get(1))/(tau_w_plus);
+            return ((1 - H(u - theta_w))*(w_inf(u) - vars.get(1)))/(tau_w_minus(u)) - (H(u - theta_w)*vars.get(1))/(tau_w_plus);
         } else if(index == 2) {
             return 1/tau_s(u) * ((1+std::tanh(k_s * (u - u_s)))/2 - vars.get(2));
         } else {
@@ -38,35 +23,25 @@ public:
 
     //first is implicit, second is explicit
     std::tuple<double, double> getExpansionCoefficients(int index, double u) {
+        double A,B;
         if(index == 0) {
-            double A = (1 - H(u - theta_v))/tau_v_minus(u);
-            double B = H(u - theta_v)/(tau_v_plus(u));
-            return std::make_tuple<double, double>(-A-B, A * v_inf);
+            A = (1 - H(u - theta_v))/tau_v_minus(u);
+            B = H(u - theta_v)/(tau_v_plus);
+            return {-A-B, A * v_inf(u)};
         } else if(index == 1) {
-            double A = (1-H(u - theta_w))/tau_w_minus(u);
-            double B = H(u - theta_w)/(tau_w_plus(u));
-            return std::make_tuple<double, double>(-A-B, + A*w_inf);
+            A = (1 - H(u - theta_w))/tau_w_minus(u);
+            B = H(u - theta_w)/(tau_w_plus);
+            return {-A-B, + A * w_inf(u)};
         } else if(index == 2) {
-            double A = 1/tau_s(u) * (1 + std::tanh(k_s * (u - u_s)))/2.0;
-            double B = 1/tau_s(u);
-            return std::make_tuple<double, double>(-B, A);
+            A = 1/tau_s(u) * (1 + std::tanh(k_s * (u - u_s)))/2.0;
+            B = (-1) * 1/tau_s(u);
+            return {B, A};
         } else {
             assert(false);
         }
-
-        virtual ~BuenoOrovioIonicModel();
     }
 
-    
-
-
-
-
-
-    
-
-
-
+    virtual ~BuenoOrovioIonicModel();
 
 protected:
     const double u_0 = 0;

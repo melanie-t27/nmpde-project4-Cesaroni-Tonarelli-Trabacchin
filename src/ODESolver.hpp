@@ -6,10 +6,18 @@
 //#include "Solver.hpp"
 template<int K_ode, int K_ion, int N_ion>
 class Solver;
+
 template<int K_ode, int K_ion, int N_ion>
 class ODESolver {
 public:
-    void solve(const std::vector<double>& u, const std::vector<GatingVariables<N_ion>>& vars) {
+
+    ODESolver(double theta_, double deltat_) :
+        theta(theta_),
+        deltat(deltat_)
+    {}
+
+
+    void solve(const std::vector<double>& u, const std::vector<GatingVariables<N_ion>>& vars, std::shared_ptr<Solver<K_ode, K_ion, N_ion>>  solver) {
         int size = u.size();
         std::vector<GatingVariables<N_ion>> new_vars;
         new_vars.resize(size);
@@ -21,10 +29,11 @@ public:
         }
         solver->setODESolution(new_vars);
     }
+
+    
 private:
     double theta;
     double deltat;
-    Solver<K_ode, K_ion, N_ion>* solver;
 
 };
 #endif

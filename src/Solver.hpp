@@ -10,18 +10,21 @@
 using namespace dealii;
 
 
-
 template<int K_ode, int K_ion, int N_ion>
 class Solver {
         static constexpr unsigned int dim = 3;
 
 public:
-    Solver( const std::string &mesh_file_name_,
+    Solver( 
+         const std::string &mesh_file_name_,
          const unsigned int &r_,
          const double       &T_,
          const double       &deltat_,
          const double       &fe_theta_,
-         const double       &ode_theta_)
+         const double       &ode_theta_,
+         std::shared_ptr<IonicModel<K_ion, N_ion>> ionic_model_,
+         std::shared_ptr<Coupler<K_ode, K_ion, N_ion>> coupler_
+         )
             : mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD))
             , mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD))
             , pcout(std::cout, mpi_rank == 0)
@@ -33,7 +36,11 @@ public:
             , ode_theta(ode_theta_)
             , mesh(MPI_COMM_WORLD)
             , fe_solver(mesh_file_name_, r_, T_, deltat_, fe_theta_)
+            , ionic_model(ionic_model_)
+            , coupler(coupler_)
+            , ode_solver(ode_theta_, deltat_)
     {}
+
     void notify_FE_ready(TrilinosWrappers::MPI::Vector solution) {
 
     }
@@ -61,11 +68,11 @@ public:
         }
     }*/
 
-    std::unique_ptr<FiniteElement<dim>> getFiniteElement() {
+    std::shared_ptr<FiniteElement<dim>> getFiniteElement() {
         return fe;
     }
 
-    std::unique_ptr<Quadrature<dim>> getQuadrature() {
+    std::shared_ptr<Quadrature<dim>> getQuadrature() {
         return quadrature;
     }
 
@@ -73,7 +80,7 @@ public:
         return dof_handler;
     }
 
-    parallel::fullydistributed::Triangulation<dim> getMesh() {
+    parallel::fullydistributed::Triangulation<dim>& getMesh() {
         return mesh;
     }
 
@@ -83,11 +90,11 @@ public:
         return dof_handler.active_cell_iterators();
     }*/
 
-    auto const & getGatingVars() {
+    auto & getGatingVars() {
         return gate_vars;
     }
 
-    auto const & getSol(int k) {
+    auto & getSol(int k) {
         return u[u.size() - k];
     }
 
@@ -120,16 +127,26 @@ public:
         gate_vars = sol;
     }
 
+    void setFESolution(TrilinosWrappers::MPI::Vector& sol){
+        std::vector<double> s;
+        for(unsigned int i = 0; i < sol.size(); i++){
+            s[i] = sol[i];
+        }
+        u.emplace_front(s);
+        if(K_ion < u.size())
+            u.pop_back();
+    }
+
     auto const & getSolQuadrature() {
         return u_quadrature;
     }
-
 
 
     void solve() {
         time = 0.0;
         time_step = 0;
         unsigned k = 1;
+        fe_solver.output(time_step);
         while(time < T) {
             //solve ode
             time += deltat;
@@ -137,14 +154,13 @@ public:
             ode_solver.solve(coupler.from_fe_to_ode(), gate_vars);
             coupler.from_ode_to_fe();
             fe_solver.solve(time, time_step);
+            fe_solver.output(time_step);
         }
     }
 
 
 
-
 private:
-
 
     // Number of MPI processes.
     const unsigned int mpi_size;
@@ -167,54 +183,31 @@ private:
 
     double ode_theta;
 
+    std::shared_ptr<FiniteElement<dim>> fe;
 
+    std::shared_ptr<Quadrature<dim>> quadrature;
 
+    std::shared_ptr<IonicModel<K_ion,N_ion>> ionic_model;
 
-    std::unique_ptr<FiniteElement<dim>> fe;
+    std::shared_ptr<Coupler<K_ode, K_ion, N_ion>> coupler;
 
-    std::unique_ptr<Quadrature<dim>> quadrature;
-
-    std::unique_ptr<IonicModel<K_ion,N_ion>> ionic_model;
-
-    std::unique_ptr<Coupler<K_ode, K_ion, N_ion>> coupler;
-
-    std::unique_ptr<ODESolver<K_ode, K_ion, N_ion>> ode_solver;
+    ODESolver<K_ode, K_ion, N_ion> ode_solver;
 
     parallel::fullydistributed::Triangulation<dim> mesh;
 
     FESolver<K_ode, K_ion, N_ion> fe_solver;
 
-
     DoFHandler<dim> dof_handler;
-
-
 
     double time;
 
     unsigned int time_step;
-
-
-
-
-
-
-
-
-
-
-
-
 
     std::vector<double> implicit_coefficients;
 
     std::vector<double> explicit_coefficients;
 
     std::vector<double> u_quadrature;
-
-
-
-
-
 
     std::deque<std::vector<double>> u;//defined over dof; remember push_front
 

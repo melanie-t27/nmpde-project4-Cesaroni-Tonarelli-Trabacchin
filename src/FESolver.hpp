@@ -3,8 +3,10 @@
 //#include "Solver.hpp"
 #include "utils.hpp"
 using namespace dealii;
+
 template<int K_ode, int K_ion, int N_ion>
 class Solver;
+
 template<int K_ode, int K_ion, int N_ion>
 class FESolver {
     static constexpr int dim = 3;
@@ -55,7 +57,9 @@ public:
     void assemble_rhs(double time);
     void assemble_Z_matrix();
     void solve_time_step(double time, unsigned int time_step);
+    void output(const unsigned int &time_step) const;
     //void solve();
+
 private:
     D<dim> d;
     Iapp I_app;
@@ -85,25 +89,7 @@ private:
     const double theta;
 
 
-
-    std::unique_ptr<Solver<K_ode, K_ion, N_ion>> solver;
-
-
-  // MPI parallel. /////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-
-  // Discretization. ///////////////////////////////////////////////////////////
-
-  
-
-
+    std::shared_ptr<Solver<K_ode, K_ion, N_ion>> solver;
 
 
   // Mesh.

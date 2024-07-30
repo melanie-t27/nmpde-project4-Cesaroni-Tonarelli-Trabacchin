@@ -23,6 +23,8 @@
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/vector_tools.h>
+
+
 template<int N>
 struct GatingVariables {
     double& get(int k) {
@@ -31,7 +33,7 @@ struct GatingVariables {
     }
 private:
     double var[N];
-
 };
+
 
 #endif
