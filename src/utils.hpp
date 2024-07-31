@@ -24,6 +24,7 @@
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/vector_tools.h>
 
+using namespace dealii;
 
 template<int N>
 struct GatingVariables {
@@ -33,6 +34,69 @@ struct GatingVariables {
     }
 private:
     double var[N];
+};
+
+template <int dim>
+class D : public TensorFunction<2, dim>
+{
+    public:
+        D() : TensorFunction<2, dim>() {}
+        void value_list(const std::vector<Point<dim>> &/*points*/, std::vector<Tensor<2, dim>> & /*values*/) const override {} // do not use it
+
+        typename TensorFunction<2, dim>::value_type value(const Point<dim> &/*p*/) const override {
+            return unit_symmetric_tensor<dim>();
+        }
+};
+
+template <int dim>
+class Iapp : public Function<dim>
+{
+public:
+    virtual double
+    value(const Point<dim> & /*p*/, const unsigned int /*component*/ = 0) const override
+    {
+        return 0.1;
+    }
+};
+
+template <int dim>
+class U_0 : public Function<dim> {
+    public:
+        virtual double
+        value(const Point<dim> & /*p*/, const unsigned int /*component*/ = 0) const override
+        {
+            return 0.0;
+        }
+};
+
+template <int dim>
+class GatingVariable_V0 : public Function<dim> {
+    public:
+        virtual double
+        value(const Point<dim> & /*p*/, const unsigned int /*component*/ = 0) const override
+        {
+            return 0.0;
+        }
+};
+
+template <int dim>
+class GatingVariable_W0 : public Function<dim> {
+    public:
+        virtual double
+        value(const Point<dim> & /*p*/, const unsigned int /*component*/ = 0) const override
+        {
+            return 0.0;
+        }
+};
+
+template <int dim>
+class GatingVariable_S0 : public Function<dim> {
+    public:
+        virtual double
+        value(const Point<dim> & /*p*/, const unsigned int /*component*/ = 0) const override
+        {
+            return 0.0;
+        }
 };
 
 

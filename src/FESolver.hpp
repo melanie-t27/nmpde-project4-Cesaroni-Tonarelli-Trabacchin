@@ -1,108 +1,116 @@
 #ifndef FE_SOLVER_H
 #define FE_SOLVER_H
-//#include "Solver.hpp"
+
 #include "utils.hpp"
+
 using namespace dealii;
 
-template<int K_ode, int K_ion, int N_ion>
-class Solver;
-
-template<int K_ode, int K_ion, int N_ion>
 class FESolver {
+    // Physical dimension (1D, 2D, 3D)
     static constexpr int dim = 3;
 public:
-    FESolver( const std::string &mesh_file_name_,
+    FESolver(
             const unsigned int &r_,
             const double       &T_,
             const double       &deltat_,
-            const double       &theta_)
+            const double       &theta_,
+            parallel::fullydistributed::Triangulation<dim>& mesh_, 
+            std::shared_ptr<FiniteElement<dim>> fe_,
+            std::shared_ptr<Quadrature<dim>> quadrature_, 
+            DoFHandler<dim>& dof_handler_,
+            std::unique_ptr<TensorFunction<2, dim>> d_,
+            std::unique_ptr<Function<dim>> I_app_
+            )
             : mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD))
             , mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD))
             , pcout(std::cout, mpi_rank == 0)
             , T(T_)
-            , mesh_file_name(mesh_file_name_)
             , r(r_)
             , deltat(deltat_)
             , theta(theta_)
-            , mesh(MPI_COMM_WORLD)
-    {}
-
-    template <int dim>
-    class D : public TensorFunction<2, dim>
+            , mesh(mesh_)
+            , fe(fe_)
+            , quadrature(quadrature_)
+            , dof_handler(dof_handler_)
+            , d(std::move(d_))
+            , I_app(std::move(I_app_))
     {
-    public:
-        D() : TensorFunction<2, dim>() {}
-        void value_list(const std::vector<Point<dim>> &/*points*/,
-                   std::vector<Tensor<2, dim>> & /*values*/) const override {} // do not use it
+        locally_owned_dofs = dof_handler.locally_owned_dofs();
+        DoFTools::extract_locally_relevant_dofs(dof_handler, locally_relevant_dofs);
+    }
 
-        typename TensorFunction<2, dim>::value_type value(const Point<dim> &/*p*/) const override {
-            return unit_symmetric_tensor<dim>();
-        }
-    };
+    // Initialization.
+    void setup(); 
 
-    class Iapp : public Function<dim>
-    {
-    public:
-        virtual double
-        value(const Point<dim> & /*p*/,
-              const unsigned int /*component*/ = 0) const override
-        {
-            return 0.1;
-        }
-    };
-
-
-    void setup();
+    // Assemble the mass and stiffness matrices.
     void assemble_matrices();
+
+    // Assemble the right-hand side of the problem.
     void assemble_rhs(double time);
+
+    // Assemble left-hand side of the problem.
     void assemble_Z_matrix();
-    void solve_time_step(double time, unsigned int time_step);
+
+    // Solve the problem for one time step.
+    TrilinosWrappers::MPI::Vector& solve_time_step(double time);
+
+    // Output.
     void output(const unsigned int &time_step) const;
-    //void solve();
+
+    double& getImplicitCoefficient(int cell_index, int q)  {
+        return implicit_coefficients[cell_index * quadrature->size() + q];
+    }
+
+    double& getExplicitCoefficient(int cell_index, int q)  {
+        return explicit_coefficients[cell_index * quadrature->size() + q];
+    }
+
+    TrilinosWrappers::MPI::Vector& setInitialSolution(std::unique_ptr<Function<dim>> u_0){
+        VectorTools::interpolate(dof_handler, *u_0, solution_owned);
+        solution = solution_owned;
+    }
 
 private:
-    D<dim> d;
-    Iapp I_app;
+  
 
-    // Number of MPI processes.
+  // MPI parallel. /////////////////////////////////////////////////////////////
+
+  // Number of MPI processes.
     const unsigned int mpi_size;
 
-    // This MPI process.
-    const unsigned int mpi_rank;
+  // This MPI process.
+  const unsigned int mpi_rank;
 
-    // Parallel output stream.
-    ConditionalOStream pcout;
+  // Parallel output stream.
+  ConditionalOStream pcout;
 
+  // Problem definition. ///////////////////////////////////////////////////////
 
-    // Final time.
-    const double T;
+  // Final time.
+  const double T;
 
-    const std::string mesh_file_name;
+  // Discretization. ///////////////////////////////////////////////////////////
 
-    // Polynomial degree.
-    const unsigned int r;
+  // Polynomial degree.
+  const unsigned int r;
 
-    // Time step.
-    const double deltat;
+  // Time step.
+  const double deltat;
 
-    // Theta parameter of the theta method.
-    const double theta;
-
-
-    std::shared_ptr<Solver<K_ode, K_ion, N_ion>> solver;
-
+  // Theta parameter of the theta method.
+  const double theta;
 
   // Mesh.
-  parallel::fullydistributed::Triangulation<dim> mesh;
+  parallel::fullydistributed::Triangulation<dim>& mesh;
 
   // Finite element space.
-  std::unique_ptr<FiniteElement<dim>> fe;
+  std::shared_ptr<FiniteElement<dim>> fe;
 
   // Quadrature formula.
-  std::unique_ptr<Quadrature<dim>> quadrature;
+  std::shared_ptr<Quadrature<dim>> quadrature;
 
   // DoF handler.
-  DoFHandler<dim> dof_handler;
+  DoFHandler<dim>& dof_handler;
 
   // DoFs owned by current process.
   IndexSet locally_owned_dofs;
@@ -116,8 +124,8 @@ private:
   // Stiffness matrix K.
   TrilinosWrappers::SparseMatrix stiffness_matrix;
 
+  // Matrix on the left-hand size Z.
   TrilinosWrappers::SparseMatrix Z_matrix;
-
 
   // Matrix on the left-hand side (M / deltat + theta A).
   TrilinosWrappers::SparseMatrix lhs_matrix;
@@ -133,5 +141,14 @@ private:
 
   // System solution (including ghost elements).
   TrilinosWrappers::MPI::Vector solution;
+
+
+
+  std::unique_ptr<TensorFunction<2, dim>> d;
+  std::unique_ptr<Function<dim>> I_app;
+
+  std::vector<double> implicit_coefficients; 
+
+  std::vector<double> explicit_coefficients; 
 };
 #endif

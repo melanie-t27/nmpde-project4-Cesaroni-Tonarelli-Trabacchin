@@ -3,37 +3,36 @@
 #include <array>
 #include <vector>
 #include "utils.hpp"
-//#include "Solver.hpp"
-template<int K_ode, int K_ion, int N_ion>
-class Solver;
 
 template<int K_ode, int K_ion, int N_ion>
 class ODESolver {
 public:
 
-    ODESolver(double theta_, double deltat_) :
+    ODESolver(double theta_, double deltat_, std::shared_ptr<IonicModel<K_ion, N_ion>> ionic_model_) :
         theta(theta_),
-        deltat(deltat_)
+        deltat(deltat_),
+        ionic_model(ionic_model_)
     {}
 
 
-    void solve(const std::vector<double>& u, const std::vector<GatingVariables<N_ion>>& vars, std::shared_ptr<Solver<K_ode, K_ion, N_ion>>  solver) {
+    std::vector<GatingVariables<N_ion>> solve(std::vector<double>& u, std::vector<GatingVariables<N_ion>>& vars) {
         int size = u.size();
         std::vector<GatingVariables<N_ion>> new_vars;
         new_vars.resize(size);
         for(int i = 0; i < size; i++) {
             for(int j = 0; j < N_ion; j++) {
-                auto [impl, expl] = solver->getIonicModel().getExpansionCoefficients(j, u[i]);
-                new_vars[i].get(j) = (u[i]/deltat + theta*expl + (1-theta)*vars[i].get(j))/(1/deltat - theta*impl);
+                auto [impl, expl] = ionic_model->getExpansionCoefficients(j, u[i]);
+                new_vars[i].get(j) = (u[i]/deltat + theta * expl + (1-theta) * vars[i].get(j))/(1/deltat - theta*impl);
             }
         }
-        solver->setODESolution(new_vars);
+        return new_vars;
     }
 
     
 private:
     double theta;
     double deltat;
+    std::shared_ptr<IonicModel<K_ion, N_ion>> ionic_model;
 
 };
 #endif
