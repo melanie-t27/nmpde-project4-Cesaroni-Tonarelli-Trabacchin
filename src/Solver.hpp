@@ -51,8 +51,8 @@ public:
     {
         setup();
         fe_solver = std::make_unique<FESolver>(r_, T_, deltat_, fe_theta_, mesh, fe, quadrature, dof_handler, std::move(d_), std::move(I_app_));
-        setFESolution(fe_solver->setInitialSolution(u_0));
-        coupler->setInitialGatingVariables(*this, gate_vars_0);
+        setFESolution(fe_solver->setInitialSolution(std::move(u_0)));
+        coupler->setInitialGatingVariables(*this, std::move(gate_vars_0));
     }
 
     std::vector<double>& getLastSolution() {
