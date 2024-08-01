@@ -49,10 +49,17 @@ public:
             , coupler(coupler_)
             , ode_solver(ode_theta_, deltat_, ionic_model_)
     {
-        setup();
+
+        std::cout << "constructing solver" << std::endl;
+        init();
+        std::cout << "completed setup" << std::endl;
         fe_solver = std::make_unique<FESolver>(r_, T_, deltat_, fe_theta_, mesh, fe, quadrature, dof_handler, std::move(d_), std::move(I_app_));
+        fe_solver->setup();
+        std::cout << "completed fe setup" << std::endl;
         setFESolution(fe_solver->setInitialSolution(std::move(u_0)));
+        std::cout << "completed fe sol" << std::endl;
         coupler->setInitialGatingVariables(*this, std::move(gate_vars_0));
+        std::cout << "completed gate sol" << std::endl;
     }
 
     std::vector<double>& getLastSolution() {
@@ -121,14 +128,17 @@ public:
 
     void setODESolution(std::vector<GatingVariables<N_ion>>& sol) {
         gate_vars = sol;
+        //std::cout << "ode sol length 1 = " << gate_vars.size() << std::endl;
     }
 
     void setODESolution(std::vector<GatingVariables<N_ion>>&& sol) {
         gate_vars = sol;
+        //std::cout << "ode sol length 2 = " << gate_vars.size() << std::endl;
     }
 
     void setFESolution(const TrilinosWrappers::MPI::Vector& sol){
         std::vector<double> s;
+        s.resize(sol.size());
         for(unsigned int i = 0; i < sol.size(); i++){
             s[i] = sol[i];
         }
@@ -145,10 +155,10 @@ public:
     void solve() {
         time = 0.0;
         unsigned int time_step = 0;
-        fe_solver->setup();
         fe_solver->output(time_step);
         while(time < T) {
             //solve ode
+            std::cout << "solving time step " << time_step << std::endl; 
             time += deltat;
             time_step++;
             setODESolution(ode_solver.solve(coupler->from_fe_to_ode(*this), gate_vars));
@@ -228,10 +238,10 @@ private:
     DoFHandler<dim> dof_handler;
 
 
-    void setup() {
+    void init() {
         // Create the mesh.
         {
-            pcout << "Initializing the mesh" << std::endl;
+            pcout << "Initializing the mesh " <<  std::endl;
 
             Triangulation<dim> mesh_serial;
 

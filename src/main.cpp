@@ -13,6 +13,7 @@
 using namespace dealii;
 
 int main(int argc, char *argv[]){
+    std::cout << "main started" << std::endl;
     const unsigned int dim = 3;
     Utilities::MPI::MPI_InitFinalize mpi_init(argc, argv);
     const unsigned int mpi_rank = Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
@@ -25,7 +26,7 @@ int main(int argc, char *argv[]){
     const double deltat = 0.1;
 
     std::unique_ptr<U_0<dim>> u_0 = std::make_unique<U_0<dim>>();
-    std::array<std::unique_ptr<Function<dim>>, 3> gating_variables_0({std::make_unique<GatingVariable_V0<dim>>(), std::make_unique<GatingVariable_W0<dim>>(), std::make_unique<GatingVariable_S0<dim>>() });
+    std::array<std::unique_ptr<Function<dim>>, 3> gating_variables_0{{std::make_unique<GatingVariable_V0<dim>>(), std::make_unique<GatingVariable_W0<dim>>(), std::make_unique<GatingVariable_S0<dim>>() }};
     std::shared_ptr<BuenoOrovioIonicModelIon1<1,3>> ionic_model = std::make_shared<BuenoOrovioIonicModelIon1<1,3>>();
     std::shared_ptr<SVICoupler<1,1,3>> coupler = std::make_shared<SVICoupler<1,1,3>>();
     std::unique_ptr<Iapp<dim>> I_app = std::make_unique<Iapp<dim>>();

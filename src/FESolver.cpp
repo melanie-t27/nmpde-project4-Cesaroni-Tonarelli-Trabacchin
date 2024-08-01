@@ -7,6 +7,8 @@ using namespace dealii;
 void FESolver::setup() 
 {
     // Initialise linear system.
+    implicit_coefficients.resize(mesh.n_active_cells() * quadrature->size());
+    explicit_coefficients.resize(mesh.n_active_cells() * quadrature->size());
     pcout << "Initializing the linear system" << std::endl;
     pcout << "  Initializing the sparsity pattern" << std::endl;
 

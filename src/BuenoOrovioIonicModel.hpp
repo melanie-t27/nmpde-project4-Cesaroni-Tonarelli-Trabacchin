@@ -18,6 +18,7 @@ public:
             return 1/tau_s(u) * ((1+std::tanh(k_s * (u - u_s)))/2 - vars.get(2));
         } else {
             assert(false);
+            throw -1;
         }
     }
 
@@ -38,6 +39,7 @@ public:
             return {B, A};
         } else {
             assert(false);
+            throw -1;
         }
     }
 

@@ -28,7 +28,7 @@ public:
         const unsigned int dofs_per_cell = fe->dofs_per_cell;
         const unsigned int n_q           = quadrature->size();
         std::array<double, N_ion + 1> interpolated_values;
-        memset(&interpolated_values, 0, sizeof(int) * (N_ion + 1));
+        memset(&interpolated_values, 0, sizeof(double) * (N_ion + 1));
         std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
         std::array<double, K_ion> history_u;
         std::vector<double> new_history_item;
@@ -41,10 +41,14 @@ public:
             for(unsigned int q = 0; q < n_q; q++) {
                 for (unsigned int i = 0; i < dofs_per_cell; ++i)
                 {
+                    double shape_value = fe_values.shape_value(i, q);
+                    size_t local_index = local_dof_indices[i];
+                    //std::cout << "gating vars length = " << solver.getGatingVars().size() << std::endl;
+                    //std::cout << "sol length = " << solver.getSol(1).size() << std::endl;
                     for(int j = 0; j < N_ion; j++) {
-                        interpolated_values[j] += solver.getGatingVars()[local_dof_indices[i]].get(j) * fe_values.shape_value(i, q);
+                        interpolated_values[j] += solver.getGatingVars()[local_index].get(j) * shape_value;
                     }
-                    interpolated_values[N_ion] += solver.getSol(1)[local_dof_indices[i]] * fe_values.shape_value(i, q);
+                    interpolated_values[N_ion] += solver.getSol(1)[local_index] * shape_value;
                 }
 
                 history_u[0] = interpolated_values[N_ion];
@@ -76,10 +80,11 @@ public:
         gate_interp_0.resize(solver.getDofHandler().n_dofs());
         for(int i = 0; i < N_ion; i++) {
             VectorTools::interpolate(solver.getDofHandler(), *gate_vars_0[i], tmp);
-            for(int j = 0; j < gate_interp_0.size(); j++){
+            for(size_t j = 0; j < gate_interp_0.size(); j++){
                 gate_interp_0[j].get(i) = tmp[j];
             }
         }
+        //std::cout << "gate interp size = " << gate_interp_0.size() << std::endl;
         solver.setODESolution(gate_interp_0);
     }
 

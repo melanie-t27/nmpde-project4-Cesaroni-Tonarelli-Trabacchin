@@ -68,6 +68,9 @@ public:
     TrilinosWrappers::MPI::Vector& setInitialSolution(std::unique_ptr<Function<dim>> u_0){
         VectorTools::interpolate(dof_handler, *u_0, solution_owned);
         solution = solution_owned;
+        return solution_owned;
+        //solution_owned = 0.0;
+        //solution = 0.0;
     }
 
 private:
