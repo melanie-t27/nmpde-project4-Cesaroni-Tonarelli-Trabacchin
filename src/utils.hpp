@@ -43,8 +43,21 @@ class D : public TensorFunction<2, dim>
         D() : TensorFunction<2, dim>() {}
         void value_list(const std::vector<Point<dim>> &/*points*/, std::vector<Tensor<2, dim>> & /*values*/) const override {} // do not use it
 
-        typename TensorFunction<2, dim>::value_type value(const Point<dim> &/*p*/) const override {
-            return unit_symmetric_tensor<dim>()/100.0;
+        typename TensorFunction<2, dim>::value_type value(const Point<dim> & p) const override {
+            Tensor<2, dim> sigma = unit_symmetric_tensor<dim>()/50;
+            if(sqrt( (p[0] - p[1]) * (p[0] - p[1])  + (p[2] - p[0]) * (p[2] - p[0]) + (p[1] - p[2]) * (p[1] - p[2]))/sqrt(3) < 0.1) {
+                return sigma;
+            } else {
+                return 0.0 * sigma;
+            }
+            /*sigma[0][0] = 0.2;
+            sigma[1][1] = 0.1;
+            sigma[2][2] = 0.05;
+            double S = 0.9;
+            double Cm = 1 * 1e-3;
+            return sigma/(S*Cm);*/
+
+
         }
 };
 

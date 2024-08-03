@@ -32,7 +32,7 @@ public:
         std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
         std::array<double, K_ion> history_u;
         std::vector<double> new_history_item;
-        new_history_item.resize(solver.getMesh().n_locally_owned_active_cells() * n_q);
+        new_history_item.resize(solver.getMesh().n_active_cells() * n_q+1);
         for(const auto &cell : dofHandler.active_cell_iterators()) {
             if (!cell->is_locally_owned())
                 continue;
@@ -52,7 +52,7 @@ public:
                 }
 
                 history_u[0] = interpolated_values[N_ion];
-                new_history_item[cell->active_cell_index()*n_q + q] = interpolated_values[N_ion];
+                new_history_item.at(cell->active_cell_index()*n_q + q) = interpolated_values[N_ion];
 
                 for(int j = 1; j < K_ion ;j++) {
                     history_u[j] = history[j-1][cell->active_cell_index()*n_q + q];
@@ -66,10 +66,13 @@ public:
                 solver.getExplicitCoefficient(cell->active_cell_index(), q) = ionicModel->explicit_coefficient(history_u, std::min(K_ion, solver.getSolSize()), vars);
             }
         }
-        history.emplace_front(new_history_item);
+
+
+        history.push_front(new_history_item);
         if(history.size() > K_ion) {
             history.pop_back();
         }
+
     }
 
     void setInitialGatingVariables(Solver<K_ode, K_ion, N_ion>& solver, std::array<std::unique_ptr<Function<dim>>, N_ion>  gate_vars_0) {

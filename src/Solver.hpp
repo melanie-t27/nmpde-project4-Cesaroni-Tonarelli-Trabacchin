@@ -50,16 +50,11 @@ public:
             , ode_solver(ode_theta_, deltat_, ionic_model_)
     {
 
-        std::cout << "constructing solver" << std::endl;
         init();
-        std::cout << "completed setup" << std::endl;
         fe_solver = std::make_unique<FESolver>(r_, T_, deltat_, fe_theta_, mesh, fe, quadrature, dof_handler, std::move(d_), std::move(I_app_));
         fe_solver->setup();
-        std::cout << "completed fe setup" << std::endl;
         setFESolution(fe_solver->setInitialSolution(std::move(u_0)));
-        std::cout << "completed fe sol" << std::endl;
         coupler->setInitialGatingVariables(*this, std::move(gate_vars_0));
-        std::cout << "completed gate sol" << std::endl;
     }
 
     std::vector<double>& getLastSolution() {
