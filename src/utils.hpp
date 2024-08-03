@@ -44,7 +44,7 @@ class D : public TensorFunction<2, dim>
         void value_list(const std::vector<Point<dim>> &/*points*/, std::vector<Tensor<2, dim>> & /*values*/) const override {} // do not use it
 
         typename TensorFunction<2, dim>::value_type value(const Point<dim> &/*p*/) const override {
-            return unit_symmetric_tensor<dim>();
+            return unit_symmetric_tensor<dim>()/100.0;
         }
 };
 
@@ -53,9 +53,13 @@ class Iapp : public Function<dim>
 {
 public:
     virtual double
-    value(const Point<dim> & /*p*/, const unsigned int /*component*/ = 0) const override
+    value(const Point<dim> & p, const unsigned int /*component*/ = 0) const override
     {
-        return 0.1;
+        
+        if(p[0] < 0.1 && p[1] < 0.1 && p[2] < 0.1) {
+            return 0.1;
+        }
+        return 0.0;
     }
 };
 
