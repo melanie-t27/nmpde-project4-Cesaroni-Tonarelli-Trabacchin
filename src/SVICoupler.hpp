@@ -52,7 +52,7 @@ public:
                 }
 
                 history_u[0] = interpolated_values[N_ion];
-                new_history_item.at(cell->active_cell_index()*n_q + q) = interpolated_values[N_ion];
+                new_history_item[cell->active_cell_index()*n_q + q] = interpolated_values[N_ion];
 
                 for(int j = 1; j < K_ion ;j++) {
                     history_u[j] = history[j-1][cell->active_cell_index()*n_q + q];

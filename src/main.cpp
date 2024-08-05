@@ -5,7 +5,7 @@
 #include "utils.hpp"
 #include "Coupler.hpp"
 #include "IonicModel.hpp"
-#include "BuenoOrovioIonicModelIon1.hpp"
+#include "BuenoOrovioIonicModelIon2.hpp"
 #include "SVICoupler.hpp"
 #include <array>
 #include <memory>
@@ -20,14 +20,14 @@ int main(int argc, char *argv[]){
 
     const unsigned int degree = 2;
 
-    const double T     = 5.0;
+    const double T     = 10.0;
     const double theta_fe = 0.5;
     const double theta_ode = 0.5;
-    const double deltat = 0.1;
+    const double deltat = 0.005;
 
     std::unique_ptr<U_0<dim>> u_0 = std::make_unique<U_0<dim>>();
     std::array<std::unique_ptr<Function<dim>>, 3> gating_variables_0{{std::make_unique<GatingVariable_V0<dim>>(), std::make_unique<GatingVariable_W0<dim>>(), std::make_unique<GatingVariable_S0<dim>>() }};
-    std::shared_ptr<BuenoOrovioIonicModelIon1<1,3>> ionic_model = std::make_shared<BuenoOrovioIonicModelIon1<1,3>>();
+    std::shared_ptr<BuenoOrovioIonicModelIon2<1,3>> ionic_model = std::make_shared<BuenoOrovioIonicModelIon2<1,3>>();
     std::shared_ptr<SVICoupler<1,1,3>> coupler = std::make_shared<SVICoupler<1,1,3>>();
     std::unique_ptr<Iapp<dim>> I_app = std::make_unique<Iapp<dim>>();
     std::unique_ptr<D<dim>> d = std::make_unique<D<dim>>();
