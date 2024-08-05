@@ -70,7 +70,7 @@ void FESolver::assemble_matrices() {
             {
               for (unsigned int j = 0; j < dofs_per_cell; ++j)
                 {
-                  cell_mass_matrix(i, j) += fe_values.shape_value(i, q) *
+                  cell_mass_matrix(i, j) += chi * C_m * fe_values.shape_value(i, q) *
                                             fe_values.shape_value(j, q) /
                                             deltat * fe_values.JxW(q);
 
@@ -129,7 +129,7 @@ void FESolver::assemble_Z_matrix() {
     for (unsigned int q = 0; q < n_q; ++q) {
         for (unsigned int i = 0; i < dofs_per_cell; ++i) {
             for (unsigned int j = 0; j < dofs_per_cell; ++j) {
-              cell_Z_matrix(i,j) += getImplicitCoefficient(cell->active_cell_index(), q) * 
+              cell_Z_matrix(i,j) += chi * getImplicitCoefficient(cell->active_cell_index(), q) * 
                             fe_values.shape_value(i, q) * fe_values.shape_value(j, q) * fe_values.JxW(q);
             }
         }
@@ -184,7 +184,7 @@ void FESolver::assemble_rhs(const double time) {
       const double I_app_old_loc = I_app->value(fe_values.quadrature_point(q));
 
       for (unsigned int i = 0; i < dofs_per_cell; ++i) {
-        cell_rhs(i) += (theta * I_app_new_loc + (1.0 - theta) * I_app_old_loc - getExplicitCoefficient(cell->active_cell_index(), q)) *
+        cell_rhs(i) += (theta * I_app_new_loc + (1.0 - theta) * I_app_old_loc -  chi * getExplicitCoefficient(cell->active_cell_index(), q)) *
                              fe_values.shape_value(i, q) * fe_values.JxW(q);
       }
     }

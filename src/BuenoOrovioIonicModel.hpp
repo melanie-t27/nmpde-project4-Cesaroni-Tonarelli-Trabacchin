@@ -9,7 +9,12 @@ template<int K_ion, int N_ion>
 class BuenoOrovioIonicModel : public IonicModel<K_ion, N_ion> {
 public:
 
+   double getAdimensionalU(double v){
+        return (v + 84) / 85.7;
+   }
+
    double getDerivative(int index, double u, GatingVariables<N_ion> vars) override{
+        u = getAdimensionalU(u);
         if(index == 0) {
             return ((1 - H(u - theta_v))*(v_inf(u) - vars.get(0))) / (tau_v_minus(u)) - ((H(u - theta_v))*vars.get(0))/(tau_v_plus);
         } else if(index == 1) {
@@ -25,6 +30,7 @@ public:
     //first is implicit, second is explicit
     std::tuple<double, double> getExpansionCoefficients(int index, double u) override{
         double A,B;
+        u = getAdimensionalU(u);
         if(index == 0) {
             A = (1 - H(u - theta_v))/tau_v_minus(u);
             B = H(u - theta_v)/(tau_v_plus);

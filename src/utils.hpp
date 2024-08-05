@@ -43,22 +43,19 @@ class D : public TensorFunction<2, dim>
         D() : TensorFunction<2, dim>() {}
         void value_list(const std::vector<Point<dim>> &/*points*/, std::vector<Tensor<2, dim>> & /*values*/) const override {} // do not use it
 
-        typename TensorFunction<2, dim>::value_type value(const Point<dim> & p) const override {
-            Tensor<2, dim> sigma = unit_symmetric_tensor<dim>()/50;
-            if(sqrt( (p[0] - p[1]) * (p[0] - p[1])  + (p[2] - p[0]) * (p[2] - p[0]) + (p[1] - p[2]) * (p[1] - p[2]))/sqrt(3) < 0.1) {
-                return sigma;
-            } else {
-                return 0.0 * sigma;
-            }
-            /*sigma[0][0] = 0.2;
-            sigma[1][1] = 0.1;
-            sigma[2][2] = 0.05;
-            double S = 0.9;
-            double Cm = 1 * 1e-3;
-            return sigma/(S*Cm);*/
-
-
+        typename TensorFunction<2, dim>::value_type value(const Point<dim> & /*p*/) const override {
+            Tensor<2, dim> sigma = unit_symmetric_tensor<dim>();
+            sigma[0][0] = sigma_il * sigma_el / (sigma_il + sigma_el);
+            sigma[1][1] = sigma_it * sigma_et / (sigma_it + sigma_et);
+            sigma[2][2] = sigma_it * sigma_et / (sigma_it + sigma_et);
+            return sigma;
         }
+
+    private:
+        double sigma_il = 0.17;
+        double sigma_it = 0.019;
+        double sigma_el = 0.62;
+        double sigma_et = 0.24;
 };
 
 template <int dim>
@@ -68,9 +65,8 @@ public:
     virtual double
     value(const Point<dim> & p, const unsigned int /*component*/ = 0) const override
     {
-        
-        if(p[0] < 0.1 && p[1] < 0.1 && p[2] < 0.1) {
-            return 0.1;
+        if(p[0] <= 0.15 && p[1] <= 0.15 && p[2] <= 0.15 /*millimeters*/ & this->get_time() <= 2 /* millisecond */) {
+            return 50.0 /* mA/(mm)^3 */;
         }
         return 0.0;
     }
@@ -82,7 +78,7 @@ class U_0 : public Function<dim> {
         virtual double
         value(const Point<dim> & /*p*/, const unsigned int /*component*/ = 0) const override
         {
-            return 0.0;
+            return -84; /*mV*/
         }
 };
 
@@ -92,7 +88,7 @@ class GatingVariable_V0 : public Function<dim> {
         virtual double
         value(const Point<dim> & /*p*/, const unsigned int /*component*/ = 0) const override
         {
-            return 0.0;
+            return 1.0;
         }
 };
 
@@ -102,7 +98,7 @@ class GatingVariable_W0 : public Function<dim> {
         virtual double
         value(const Point<dim> & /*p*/, const unsigned int /*component*/ = 0) const override
         {
-            return 0.0;
+            return 1.0;
         }
 };
 

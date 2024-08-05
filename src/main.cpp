@@ -16,7 +16,7 @@ int main(int argc, char *argv[]){
     std::cout << "main started" << std::endl;
     const unsigned int dim = 3;
     Utilities::MPI::MPI_InitFinalize mpi_init(argc, argv);
-    const unsigned int mpi_rank = Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
+    /*const unsigned int mpi_rank = */ Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
 
     const unsigned int degree = 2;
 
