@@ -26,7 +26,7 @@
 #include <deal.II/numerics/vector_tools.h>
 #include <vector>
 #include <array>
-//#include "Solver.hpp"
+#include "Solver.hpp"
 #include "utils.hpp"
 
 using namespace dealii;

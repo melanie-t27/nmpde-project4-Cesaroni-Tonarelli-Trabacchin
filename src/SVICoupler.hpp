@@ -83,8 +83,10 @@ public:
         gate_interp_0.resize(solver.getDofHandler().n_dofs());
         for(int i = 0; i < N_ion; i++) {
             VectorTools::interpolate(solver.getDofHandler(), *gate_vars_0[i], tmp);
-            for(size_t j = 0; j < gate_interp_0.size(); j++){
-                gate_interp_0[j].get(i) = tmp[j];
+            auto [first, last] = tmp.local_range();
+            size_t k = 0;
+            for(size_t j = first; j < last; j++, k++){
+                gate_interp_0[k].get(i) = tmp[j];
             }
         }
         //std::cout << "gate interp size = " << gate_interp_0.size() << std::endl;

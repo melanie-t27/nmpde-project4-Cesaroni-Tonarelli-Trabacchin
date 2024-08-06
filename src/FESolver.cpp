@@ -22,6 +22,7 @@ void FESolver::setup()
     stiffness_matrix.reinit(sparsity);
     lhs_matrix.reinit(sparsity);
     rhs_matrix.reinit(sparsity);
+    Z_matrix.reinit(sparsity);
 
     pcout << "  Initializing the system right-hand side" << std::endl;
     system_rhs.reinit(locally_owned_dofs, MPI_COMM_WORLD);
@@ -221,7 +222,7 @@ FESolver::solve_time_step(double time)
 
   SolverCG<TrilinosWrappers::MPI::Vector> solver_ls(solver_control);
   TrilinosWrappers::PreconditionILU      preconditioner;
-  preconditioner.initialize(lhs_matrix, TrilinosWrappers::PreconditionILU::AdditionalData(0,0.0,1.0,0));
+  preconditioner.initialize(lhs_matrix, TrilinosWrappers::PreconditionILU::AdditionalData(0,0.0,1.01,0));
 
   auto start3 = std::chrono::high_resolution_clock::now();
   solver_ls.solve(lhs_matrix, solution_owned, system_rhs, preconditioner);

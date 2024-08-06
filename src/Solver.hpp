@@ -133,9 +133,11 @@ public:
 
     void setFESolution(const TrilinosWrappers::MPI::Vector& sol){
         std::vector<double> s;
-        s.resize(sol.size());
-        for(unsigned int i = 0; i < sol.size(); i++){
-            s[i] = sol[i];
+        s.resize(sol.local_size());
+        auto [first, last] = sol.local_range();
+        int i = 0;
+        for(unsigned int j = first; j < last; i++, j++){
+            s[i] = sol[j];
         }
         u.emplace_front(s);
         if(K_ion < u.size())

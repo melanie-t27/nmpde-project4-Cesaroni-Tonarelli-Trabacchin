@@ -22,7 +22,7 @@ public:
         for(int i = 0; i < size; i++) {
             for(int j = 0; j < N_ion; j++) {
                 auto [impl, expl] = ionic_model->getExpansionCoefficients(j, u[i]);
-                new_vars[i].get(j) = (u[i]/deltat + theta * expl + (1-theta) * vars[i].get(j))/(1/deltat - theta*impl);
+                new_vars[i].get(j) = (vars[i].get(j)*(1/deltat + (1 - theta)*impl) + expl)/(1/deltat - theta*impl);
             }
         }
         return new_vars;
