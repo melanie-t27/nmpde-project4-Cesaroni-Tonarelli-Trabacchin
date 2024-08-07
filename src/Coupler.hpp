@@ -28,6 +28,7 @@
 #include <array>
 #include "Solver.hpp"
 #include "utils.hpp"
+#include "ODESolver.hpp"
 
 using namespace dealii;
 template<int K_ode, int K_ion, int N_ion>
@@ -37,8 +38,8 @@ template<int K_ode, int K_ion, int N_ion>
 class Coupler {
     static constexpr int dim = 3;
 public:
-    virtual std::vector<double>& from_fe_to_ode(Solver<K_ode, K_ion, N_ion>& solver);
-    virtual void from_ode_to_fe(Solver<K_ode, K_ion, N_ion>& solver);
+    virtual void solveOde(Solver<K_ode, K_ion, N_ion>& solver);
+    virtual void solveFE(Solver<K_ode, K_ion, N_ion>& solver, double time);
     virtual void setInitialGatingVariables(Solver<K_ode, K_ion, N_ion>& solver, 
         std::array<std::unique_ptr<Function<dim>>, N_ion> gate_vars_0);
 

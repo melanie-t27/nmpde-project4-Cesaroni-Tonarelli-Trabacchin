@@ -65,12 +65,17 @@ public:
         return explicit_coefficients[cell_index * quadrature->size() + q];
     }
 
-    TrilinosWrappers::MPI::Vector& setInitialSolution(std::unique_ptr<Function<dim>> u_0){
+    TrilinosWrappers::MPI::Vector& getSolution() {
+        return solution;
+    }
+
+    TrilinosWrappers::MPI::Vector& getSolutionOwned() {
+        return solution_owned;
+    }
+
+    void setInitialSolution(std::unique_ptr<Function<dim>> u_0){
         VectorTools::interpolate(dof_handler, *u_0, solution_owned);
         solution = solution_owned;
-        return solution_owned;
-        //solution_owned = 0.0;
-        //solution = 0.0;
     }
 
 private:

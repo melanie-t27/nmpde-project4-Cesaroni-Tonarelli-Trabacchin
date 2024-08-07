@@ -3,6 +3,8 @@
 #include <array>
 #include <vector>
 #include "utils.hpp"
+#include "ODESolver.hpp"
+#include "VectorView.hpp"
 
 template<int K_ode, int K_ion, int N_ion>
 class ODESolver {
@@ -14,18 +16,14 @@ public:
         ionic_model(ionic_model_)
     {}
 
-
-    std::vector<GatingVariables<N_ion>> solve(std::vector<double>& u, std::vector<GatingVariables<N_ion>>& vars) {
-        int size = u.size();
-        std::vector<GatingVariables<N_ion>> new_vars;
-        new_vars.resize(size);
-        for(int i = 0; i < size; i++) {
-            for(int j = 0; j < N_ion; j++) {
-                auto [impl, expl] = ionic_model->getExpansionCoefficients(j, u[i]);
-                new_vars[i].get(j) = (vars[i].get(j)*(1/deltat + (1 - theta)*impl) + expl)/(1/deltat - theta*impl);
+    template<typename VectorType>
+    void solve(VectorView<VectorType>& u, std::vector<VectorView<VectorType>>& vars) {
+        for(size_t i = 0; i < u.size(); i++) {
+            for(size_t j = 0; j < N_ion; j++) {
+                auto [impl, expl] = ionic_model->getExpansionCoefficients(j, u.get(i));
+                vars[j].set(i, (vars[j].get(i) * (1 + deltat*(1 - theta)*impl) + deltat * expl)/(1 - deltat*theta*impl));
             }
         }
-        return new_vars;
     }
 
     

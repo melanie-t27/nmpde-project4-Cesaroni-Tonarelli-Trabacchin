@@ -53,7 +53,7 @@ public:
         init();
         fe_solver = std::make_unique<FESolver>(r_, T_, deltat_, fe_theta_, mesh, fe, quadrature, dof_handler, std::move(d_), std::move(I_app_));
         fe_solver->setup();
-        setFESolution(fe_solver->setInitialSolution(std::move(u_0)));
+        fe_solver->setInitialSolution(std::move(u_0));
         coupler->setInitialGatingVariables(*this, std::move(gate_vars_0));
     }
 
@@ -83,6 +83,23 @@ public:
 
     double& getImplicitCoefficient(int cell_index, int q) {
         return fe_solver->getImplicitCoefficient(cell_index,q);
+    }
+
+    TrilinosWrappers::MPI::Vector& getFESolution() {
+        return fe_solver->getSolution();
+    }
+
+    TrilinosWrappers::MPI::Vector& getFESolutionOwned() {
+        return fe_solver->getSolutionOwned();
+    }
+
+
+    ODESolver<K_ode, K_ion, N_ion>& getOdeSolver() {
+        return ode_solver;
+    }
+
+    std::unique_ptr<FESolver>& getFESolver() {
+        return fe_solver;
     }
 
     auto & getGatingVars() {
@@ -154,13 +171,11 @@ public:
         unsigned int time_step = 0;
         fe_solver->output(time_step);
         while(time < T) {
-            //solve ode
-            std::cout << "solving time step " << time_step << std::endl; 
             time += deltat;
             time_step++;
-            setODESolution(ode_solver.solve(coupler->from_fe_to_ode(*this), gate_vars));
-            coupler->from_ode_to_fe(*this);
-            setFESolution(fe_solver->solve_time_step(time));
+            pcout << "solving time step " << time_step << std::endl; 
+            coupler->solveOde(*this);
+            coupler->solveFE(*this, time);
             fe_solver->output(time_step);
         }
     }

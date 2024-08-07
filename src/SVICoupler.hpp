@@ -5,6 +5,7 @@
 #include "Coupler.hpp"
 //#include "Solver.hpp"
 #include "utils.hpp"
+#include "VectorView.hpp"
 #include <cstring>
 
 using namespace dealii;
@@ -15,11 +16,21 @@ class SVICoupler : public Coupler<K_ode, K_ion, N_ion> {
     static constexpr unsigned int dim = 3; 
 public:
 
-    std::vector<double>& from_fe_to_ode(Solver<K_ode, K_ion, N_ion>& solver) override {
-        return solver.getSol(1);
+    void solveOde(Solver<K_ode, K_ion, N_ion>& solver) override {
+        std::vector<VectorView<TrilinosWrappers::MPI::Vector>> gate_vars_views;
+        for(int i = 0; i < N_ion; i++) {
+            auto [first, last] = gate_vars_owned[i].local_range();
+            gate_vars_views.emplace_back(gate_vars_owned[i], first, last - first);
+        }
+        auto [first, last] = solver.getFESolutionOwned().local_range();
+        VectorView<TrilinosWrappers::MPI::Vector> sol_view(solver.getFESolutionOwned(), first, last - first);
+        solver.getOdeSolver().solve(sol_view, gate_vars_views);
+        for(int i = 0; i < N_ion; i++) {
+            gate_vars[i] = gate_vars_owned[i];
+        }
     }
 
-    void from_ode_to_fe(Solver<K_ode, K_ion, N_ion>& solver) override {
+    void solveFE(Solver<K_ode, K_ion, N_ion>& solver, double time) override {
         std::shared_ptr<FiniteElement<dim>> fe = solver.getFiniteElement();
         std::shared_ptr<Quadrature<dim>> quadrature = solver.getQuadrature();
         FEValues<dim>  fe_values(*fe,*quadrature,update_values | update_gradients | update_quadrature_points | update_JxW_values);
@@ -37,18 +48,16 @@ public:
             if (!cell->is_locally_owned())
                 continue;
             fe_values.reinit(cell);
+            cell->get_dof_indices(local_dof_indices);
 
             for(unsigned int q = 0; q < n_q; q++) {
-                for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                {
+                for (unsigned int i = 0; i < dofs_per_cell; ++i) {
                     double shape_value = fe_values.shape_value(i, q);
                     size_t local_index = local_dof_indices[i];
-                    //std::cout << "gating vars length = " << solver.getGatingVars().size() << std::endl;
-                    //std::cout << "sol length = " << solver.getSol(1).size() << std::endl;
                     for(int j = 0; j < N_ion; j++) {
-                        interpolated_values[j] += solver.getGatingVars()[local_index].get(j) * shape_value;
+                        interpolated_values[j] += gate_vars[j][local_index] * shape_value;
                     }
-                    interpolated_values[N_ion] += solver.getSol(1)[local_index] * shape_value;
+                    interpolated_values[N_ion] += solver.getFESolution()[local_index] * shape_value;
                 }
 
                 history_u[0] = interpolated_values[N_ion];
@@ -73,24 +82,20 @@ public:
             history.pop_back();
         }
 
+        solver.getFESolver()->solve_time_step(time);
+
     }
 
     void setInitialGatingVariables(Solver<K_ode, K_ion, N_ion>& solver, std::array<std::unique_ptr<Function<dim>>, N_ion>  gate_vars_0) {
-        TrilinosWrappers::MPI::Vector tmp;
-        tmp.reinit(solver.getDofHandler().locally_owned_dofs(), MPI_COMM_WORLD);
-
-        std::vector<GatingVariables<N_ion>> gate_interp_0;
-        gate_interp_0.resize(solver.getDofHandler().n_dofs());
+        IndexSet locally_relevant_dofs;
+        IndexSet locally_owned_dofs = solver.getDofHandler().locally_owned_dofs();
+        DoFTools::extract_locally_relevant_dofs(solver.getDofHandler(), locally_relevant_dofs);
         for(int i = 0; i < N_ion; i++) {
-            VectorTools::interpolate(solver.getDofHandler(), *gate_vars_0[i], tmp);
-            auto [first, last] = tmp.local_range();
-            size_t k = 0;
-            for(size_t j = first; j < last; j++, k++){
-                gate_interp_0[k].get(i) = tmp[j];
-            }
+            gate_vars_owned[i].reinit(locally_owned_dofs, MPI_COMM_WORLD);
+            gate_vars[i].reinit(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
+            VectorTools::interpolate(solver.getDofHandler(), *gate_vars_0[i], gate_vars_owned[i]);
+            gate_vars[i] = gate_vars_owned[i];
         }
-        //std::cout << "gate interp size = " << gate_interp_0.size() << std::endl;
-        solver.setODESolution(gate_interp_0);
     }
 
 
@@ -98,5 +103,9 @@ public:
 
 private:
     std::deque<std::vector<double>> history;// defined over quadrature nodes
+    std::array<TrilinosWrappers::MPI::Vector, N_ion> gate_vars;
+    std::array<TrilinosWrappers::MPI::Vector, N_ion> gate_vars_owned;
+     
+
 };
 #endif
