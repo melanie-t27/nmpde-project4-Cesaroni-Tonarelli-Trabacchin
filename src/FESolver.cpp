@@ -236,15 +236,21 @@ FESolver::solve_time_step(double time)
 
 
 void
-FESolver::output(const unsigned int &time_step) const
+FESolver::output(unsigned int time_step)
 {
-  DataOut<dim> data_out;
   TrilinosWrappers::MPI::Vector solution_copy(solution);
-  data_out.add_data_vector(dof_handler, solution_copy, "u");
-  std::vector<unsigned int> partition_int(mesh.n_active_cells());
-  GridTools::get_subdomain_association(mesh, partition_int);
-  const Vector<double> partitioning(partition_int.begin(), partition_int.end());
-  data_out.add_data_vector(partitioning, "partitioning");
-  data_out.build_patches();
-  data_out.write_vtu_with_pvtu_record("./", "output", time_step, MPI_COMM_WORLD, 3);
+  std::async(std::launch::async, &FESolver::parallelOutput, this, solution_copy , time_step);
+}
+
+void
+FESolver::parallelOutput(TrilinosWrappers::MPI::Vector solution_copy, unsigned int time_step) {
+    DataOut<dim> data_out;
+    data_out.add_data_vector(dof_handler, solution_copy, "u");
+    std::vector<unsigned int> partition_int(mesh.n_active_cells());
+    GridTools::get_subdomain_association(mesh, partition_int);
+    const Vector<double> partitioning(partition_int.begin(), partition_int.end());
+    data_out.add_data_vector(partitioning, "partitioning");
+    data_out.build_patches();
+    data_out.write_vtu_with_pvtu_record("./", "output", time_step, MPI_COMM_WORLD, 3);
+
 }
