@@ -51,6 +51,12 @@ public:
     // Assemble left-hand side of the problem.
     void assemble_Z_matrix();
 
+    void assemble_Z_matrix_on_one_cell(const auto & cell, ScratchData& scratch, PerTaskData& data);
+
+    void copy_local_to_global(const PerTaskData& data);
+
+    void assemble_Z_matrix_in_parallel();
+
     // Solve the problem for one time step.
     TrilinosWrappers::MPI::Vector& solve_time_step(double time);
 

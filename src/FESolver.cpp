@@ -150,6 +150,34 @@ void FESolver::assemble_Z_matrix() {
   lhs_matrix.add(1.0, Z_matrix);
 }
 
+void FESolver::assemble_Z_matrix_on_one_cell(const auto& cell, ScratchData& scratch, PerTaskData& data){
+    const unsigned int dofs_per_cell = scratch.fe_values.get_fe().dofs_per_cell;
+    const unsigned int n_q           = scratch.fe_values.get_quadrature().size();
+    scratch.fe_values.reinit(cell);
+    data.cell_matrix = 0.0;
+    for (unsigned int q = 0; q < n_q; ++q) {
+        for (unsigned int i = 0; i < dofs_per_cell; ++i) {
+            for (unsigned int j = 0; j < dofs_per_cell; ++j) {
+                data.cell_matrix(i,j) += chi * getImplicitCoefficient(cell->active_cell_index(), q) *
+                                      scratch.fe_values.shape_value(i, q) * scratch.fe_values.shape_value(j, q) * scratch.fe_values.JxW(q);
+            }
+        }
+    }
+
+    cell->get_dof_indices(data.dof_indices);
+
+
+}
+
+void FESolver::copy_local_to_global(const PerTaskData& data){
+    Z_matrix.add(data.dof_indices, data.cell_matrix);
+}
+
+void FESolver::assemble_Z_matrix_in_parallel(){
+    ScratchData scratch_data(*fe, *quadrature, update_values | update_gradients | update_quadrature_points | update_JxW_values);
+    PerTaskData per_task_data(*fe);
+    WorkStream::run(dof_handler.begin_active(), dof_handler.end(), [this](const auto& cell, ScratchData& scratch, PerTaskData& data){this->assemble_Z_matrix_on_one_cell(cell, scratch, data);} ,[this](const PerTaskData& data){this->copy_local_to_global(data);}, scratch_data, per_task_data);
+}
 
 
 void FESolver::assemble_rhs(const double time) {
