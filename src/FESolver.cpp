@@ -239,7 +239,7 @@ void
 FESolver::output(unsigned int time_step)
 {
   TrilinosWrappers::MPI::Vector solution_copy(solution);
-  std::async(std::launch::async, &FESolver::parallelOutput, this, solution_copy , time_step);
+  auto f = std::async(std::launch::async, &FESolver::parallelOutput, this, solution_copy , time_step);
 }
 
 void
