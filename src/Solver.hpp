@@ -174,9 +174,17 @@ public:
             time += deltat;
             time_step++;
             pcout << "solving time step " << time_step << std::endl; 
+            auto start2 = std::chrono::high_resolution_clock::now();
             coupler->solveOde(*this);
+            auto stop2 = std::chrono::high_resolution_clock::now();
+            std::cout << "mpi rank " << mpi_rank << " ODE time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop2 - start2).count() << std::endl;
             coupler->solveFE(*this, time);
+            auto start1 = std::chrono::high_resolution_clock::now();
             fe_solver->output(time_step);
+            auto stop1 = std::chrono::high_resolution_clock::now();
+            std::cout << "mpi rank " << mpi_rank  << " output time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count() << " start time : " << std::chrono::time_point_cast<std::chrono::microseconds>(start1).time_since_epoch().count() << " stop time : " << std::chrono::time_point_cast<std::chrono::microseconds>(stop1).time_since_epoch().count()  << std::endl;
+
+            
         }
     }
 

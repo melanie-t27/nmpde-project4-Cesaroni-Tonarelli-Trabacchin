@@ -210,13 +210,13 @@ FESolver::solve_time_step(double time)
   auto start1 = std::chrono::high_resolution_clock::now();
   assemble_Z_matrix();
   auto stop1 = std::chrono::high_resolution_clock::now();
-  pcout << "matrix Z assemble time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count() << std::endl;
+  std::cout << "mpi rank " << mpi_rank << " matrix Z assemble time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count() << std::endl;
 
 
   auto start2 = std::chrono::high_resolution_clock::now();
   assemble_rhs(time);
   auto stop2 = std::chrono::high_resolution_clock::now();
-  pcout << "rhs assemble time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop2 - start2).count() << std::endl;
+  std::cout << "mpi rank " << mpi_rank << " rhs assemble time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop2 - start2).count() << std::endl;
 
   SolverControl solver_control(1000, 1e-6 * system_rhs.l2_norm());
 
@@ -227,9 +227,9 @@ FESolver::solve_time_step(double time)
   auto start3 = std::chrono::high_resolution_clock::now();
   solver_ls.solve(lhs_matrix, solution_owned, system_rhs, preconditioner);
   auto stop3 = std::chrono::high_resolution_clock::now();
-  pcout << "cg time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop3 - start3).count() << std::endl;
+  std::cout << "mpi rank " << mpi_rank << " CG time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop3 - start3).count() << std::endl;
 
-  pcout << "  " << solver_control.last_step() << " CG iterations" << std::endl;
+  std::cout << "mpi rank " << mpi_rank << " " << solver_control.last_step() << " CG iterations" << std::endl;
   solution = solution_owned;
   return solution_owned;
 }
