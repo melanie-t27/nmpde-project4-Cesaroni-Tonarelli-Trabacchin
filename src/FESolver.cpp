@@ -239,7 +239,8 @@ void
 FESolver::output(const unsigned int &time_step) const
 {
   DataOut<dim> data_out;
-  data_out.add_data_vector(dof_handler, solution, "u");
+  TrilinosWrappers::MPI::Vector solution_copy(solution);
+  data_out.add_data_vector(dof_handler, solution_copy, "u");
   std::vector<unsigned int> partition_int(mesh.n_active_cells());
   GridTools::get_subdomain_association(mesh, partition_int);
   const Vector<double> partitioning(partition_int.begin(), partition_int.end());
