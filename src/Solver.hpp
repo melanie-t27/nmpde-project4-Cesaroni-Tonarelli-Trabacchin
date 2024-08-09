@@ -55,6 +55,11 @@ public:
         fe_solver->setup();
         fe_solver->setInitialSolution(std::move(u_0));
         coupler->setInitialGatingVariables(*this, std::move(gate_vars_0));
+        #ifdef CHECK_ACTIVATION_TIMES
+        std::cout << "checling activation times" << std::endl;
+        activation_times_init();
+        #endif
+
     }
 
     std::vector<double>& getLastSolution() {
@@ -169,13 +174,12 @@ public:
     void solve() {
         time = 0.0;
         unsigned int time_step = 0;
-        std::vector<std::future<void>> futures;
+        #ifndef CHECK_ACTIVATION_TIMES
         fe_solver->output(time_step);
-        int tmp = 0;
-        while(time < T && tmp < 3) {
+        #endif
+        while(time < T) {
             time += deltat;
             time_step++;
-            tmp++;
             pcout << "solving time step " << time_step << std::endl; 
             auto start2 = std::chrono::high_resolution_clock::now();
             coupler->solveOde(*this);
@@ -183,15 +187,23 @@ public:
             std::cout << "mpi rank " << mpi_rank << " ODE time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop2 - start2).count() << std::endl;
             coupler->solveFE(*this, time);
             auto start1 = std::chrono::high_resolution_clock::now();
-            std::future<void> f = fe_solver->output(time_step);
-            futures.push_back(std::move(f));
+            #ifndef CHECK_ACTIVATION_TIMES
+            fe_solver->output(time_step);
+            #endif
             auto stop1 = std::chrono::high_resolution_clock::now();
             std::cout << "mpi rank " << mpi_rank  << " output time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count() << " start time : " << std::chrono::time_point_cast<std::chrono::microseconds>(start1).time_since_epoch().count() << " stop time : " << std::chrono::time_point_cast<std::chrono::microseconds>(stop1).time_since_epoch().count()  << std::endl;
+            #ifdef CHECK_ACTIVATION_TIMES
+            compute_activation_times(time);
+            #endif
         }
         //std::cout << "finishing" << std::endl;
         //for(auto& f : futures) {
         //    f.get();
         //}
+        #ifdef CHECK_ACTIVATION_TIMES
+        output_activation_times();
+        #endif
+
     }
 
 
@@ -314,6 +326,46 @@ private:
             pcout << "  Number of DoFs = " << dof_handler.n_dofs() << std::endl;
         }
     }
+
+#ifdef CHECK_ACTIVATION_TIMES
+
+    void compute_activation_times(double time) {
+
+      auto [first, last] = getFESolutionOwned().local_range();
+      for(int i=first; i<last; i++){
+          if(std::abs(getFESolutionOwned()[i])  < 1e-2 && activation_times_owned[i] != 0 ){
+              activation_times_owned[i] = time;
+          }
+      }
+
+      activation_times = activation_times_owned;
+
+
+  }
+
+  void activation_times_init() {
+      IndexSet locally_relevant_dofs;
+      IndexSet locally_owned_dofs = solver.getDofHandler().locally_owned_dofs();
+      DoFTools::extract_locally_relevant_dofs(solver.getDofHandler(), locally_relevant_dofs);
+      activation_times_owned.reinit(locally_owned_dofs, MPI_COMM_WORLD);
+      activation_times.reinit(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
+      activation_times = activation_times_owned;
+  }
+
+  void output_activation_times(){
+      DataOut<dim> data_out;
+      data_out.add_data_vector(dof_handler, activation_times, "u");
+      std::vector<unsigned int> partition_int(mesh.n_active_cells());
+      GridTools::get_subdomain_association(mesh, partition_int);
+      const Vector<double> partitioning(partition_int.begin(), partition_int.end());
+      data_out.add_data_vector(partitioning, "partitioning");
+      data_out.build_patches();
+      data_out.write_vtu_with_pvtu_record("./", "output_activation_times", 0, MPI_COMM_WORLD, 3);
+  }
+
+  TrilinosWrappers::MPI::Vector activation_times;
+  TrilinosWrappers::MPI::Vector activation_times_owned;
+#endif
 
 };
 

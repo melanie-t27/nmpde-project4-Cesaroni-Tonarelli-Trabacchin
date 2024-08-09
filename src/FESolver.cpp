@@ -268,22 +268,17 @@ FESolver::solve_time_step(double time)
 }
 
 
-std::future<void>
+void
 FESolver::output(unsigned int time_step)
 {
-  TrilinosWrappers::MPI::Vector solution_copy(solution);
-  auto f = std::async(std::launch::async, &FESolver::parallelOutput, this, solution_copy , time_step);
-  return f;
-}
-
-void
-FESolver::parallelOutput(TrilinosWrappers::MPI::Vector solution_copy, unsigned int time_step) {
     DataOut<dim> data_out;
-    data_out.add_data_vector(dof_handler, solution_copy, "u");
+    data_out.add_data_vector(dof_handler, solution, "u");
     std::vector<unsigned int> partition_int(mesh.n_active_cells());
     GridTools::get_subdomain_association(mesh, partition_int);
     const Vector<double> partitioning(partition_int.begin(), partition_int.end());
     data_out.add_data_vector(partitioning, "partitioning");
     data_out.build_patches();
     data_out.write_vtu_with_pvtu_record("./", "output", time_step, MPI_COMM_WORLD, 3);
+
 }
+
