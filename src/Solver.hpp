@@ -56,7 +56,7 @@ public:
         fe_solver->setInitialSolution(std::move(u_0));
         coupler->setInitialGatingVariables(*this, std::move(gate_vars_0));
         #ifdef CHECK_ACTIVATION_TIMES
-        std::cout << "checling activation times" << std::endl;
+        std::cout << "checking activation times" << std::endl;
         activation_times_init();
         #endif
 
@@ -180,18 +180,18 @@ public:
         while(time < T) {
             time += deltat;
             time_step++;
-            pcout << "solving time step " << time_step << std::endl; 
+            pcout << "solving time step " << time_step << std::endl;
             auto start2 = std::chrono::high_resolution_clock::now();
             coupler->solveOde(*this);
             auto stop2 = std::chrono::high_resolution_clock::now();
-            std::cout << "mpi rank " << mpi_rank << " ODE time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop2 - start2).count() << std::endl;
+            //std::cout << "mpi rank " << mpi_rank << " ODE time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop2 - start2).count() << std::endl;
             coupler->solveFE(*this, time);
             auto start1 = std::chrono::high_resolution_clock::now();
             #ifndef CHECK_ACTIVATION_TIMES
             fe_solver->output(time_step);
             #endif
             auto stop1 = std::chrono::high_resolution_clock::now();
-            std::cout << "mpi rank " << mpi_rank  << " output time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count() << " start time : " << std::chrono::time_point_cast<std::chrono::microseconds>(start1).time_since_epoch().count() << " stop time : " << std::chrono::time_point_cast<std::chrono::microseconds>(stop1).time_since_epoch().count()  << std::endl;
+            //std::cout << "mpi rank " << mpi_rank  << " output time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count() << " start time : " << std::chrono::time_point_cast<std::chrono::microseconds>(start1).time_since_epoch().count() << " stop time : " << std::chrono::time_point_cast<std::chrono::microseconds>(stop1).time_since_epoch().count()  << std::endl;
             #ifdef CHECK_ACTIVATION_TIMES
             compute_activation_times(time);
             #endif
@@ -202,6 +202,7 @@ public:
         //}
         #ifdef CHECK_ACTIVATION_TIMES
         output_activation_times();
+        fe_solver->output(time_step);
         #endif
 
     }
@@ -332,8 +333,9 @@ private:
     void compute_activation_times(double time) {
 
       auto [first, last] = getFESolutionOwned().local_range();
-      for(int i=first; i<last; i++){
-          if(std::abs(getFESolutionOwned()[i])  < 1e-2 && activation_times_owned[i] != 0 ){
+      for(size_t i=first; i<last; i++){
+          if(getFESolutionOwned()[i] > 0){
+              std::cout << "updated activation time" << std::endl;
               activation_times_owned[i] = time;
           }
       }
@@ -345,8 +347,8 @@ private:
 
   void activation_times_init() {
       IndexSet locally_relevant_dofs;
-      IndexSet locally_owned_dofs = solver.getDofHandler().locally_owned_dofs();
-      DoFTools::extract_locally_relevant_dofs(solver.getDofHandler(), locally_relevant_dofs);
+      IndexSet locally_owned_dofs = dof_handler.locally_owned_dofs();
+      DoFTools::extract_locally_relevant_dofs(dof_handler, locally_relevant_dofs);
       activation_times_owned.reinit(locally_owned_dofs, MPI_COMM_WORLD);
       activation_times.reinit(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
       activation_times = activation_times_owned;

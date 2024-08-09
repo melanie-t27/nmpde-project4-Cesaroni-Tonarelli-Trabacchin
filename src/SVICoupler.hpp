@@ -31,12 +31,12 @@ public:
         VectorView<TrilinosWrappers::MPI::Vector> sol_view(solver.getFESolutionOwned(), first, last - first);
         solver.getOdeSolver().solve(sol_view, gate_vars_views);
         auto stop1 = std::chrono::high_resolution_clock::now();
-        std::cout << "mpi rank " << mpi_rank << " size = " << last - first << " bare ode time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count() << " start time : " << std::chrono::time_point_cast<std::chrono::microseconds>(start1).time_since_epoch().count() << " stop time : " << std::chrono::time_point_cast<std::chrono::microseconds>(stop1).time_since_epoch().count()  << std::endl;        auto start2 = std::chrono::high_resolution_clock::now();
+       // std::cout << "mpi rank " << mpi_rank << " size = " << last - first << " bare ode time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count() << " start time : " << std::chrono::time_point_cast<std::chrono::microseconds>(start1).time_since_epoch().count() << " stop time : " << std::chrono::time_point_cast<std::chrono::microseconds>(stop1).time_since_epoch().count()  << std::endl;        auto start2 = std::chrono::high_resolution_clock::now();
         for(int i = 0; i < N_ion; i++) {
             gate_vars[i] = gate_vars_owned[i];
         }
         auto stop2 = std::chrono::high_resolution_clock::now();
-        std::cout << "mpi rank " << mpi_rank << " size = " << last - first << " ode communication solve time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop2 - start2).count() << " start time : " << std::chrono::time_point_cast<std::chrono::microseconds>(start2).time_since_epoch().count() << " stop time : " << std::chrono::time_point_cast<std::chrono::microseconds>(stop2).time_since_epoch().count()  << std::endl;
+        //std::cout << "mpi rank " << mpi_rank << " size = " << last - first << " ode communication solve time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop2 - start2).count() << " start time : " << std::chrono::time_point_cast<std::chrono::microseconds>(start2).time_since_epoch().count() << " stop time : " << std::chrono::time_point_cast<std::chrono::microseconds>(stop2).time_since_epoch().count()  << std::endl;
     }
 
     void solveFE(Solver<K_ode, K_ion, N_ion>& solver, double time) override {

@@ -9,7 +9,7 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wpedantic")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
-set (CHECK_ACTIVATION_TIMES)
+add_definitions (-D CHECK_ACTIVATION_TIMES)
 
 add_executable(nmpde src/main.cpp
         src/FESolver.cpp)
