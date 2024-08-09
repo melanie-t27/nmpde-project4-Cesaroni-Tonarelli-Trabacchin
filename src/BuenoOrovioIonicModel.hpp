@@ -61,59 +61,59 @@ public:
 protected:
     const double u_0 = 0;
 
-    const double u_u = 1.61;
+    const double u_u = 1.55;
 
     const double theta_v = 0.3;
 
     const double theta_w = 0.13;
 
-    const double theta_v_minus = 0.1;
+    const double theta_v_minus = 0.006;
 
-    const double theta_0 = 0.005;
+    const double theta_0 = 0.006;
 
-    const double tau_v1_minus = 80000;
+    const double tau_v1_minus = 60000;
 
-    const double tau_v2_minus = 1.4506 * 1e3;
+    const double tau_v2_minus = 1.150 * 1e3;
 
     const double tau_v_plus = 1.4506 * 1e3;
 
-    const double tau_w1_minus = 70000;
+    const double tau_w1_minus = 60000;
 
-    const double tau_w2_minus = 8 * 1e3;
+    const double tau_w2_minus = 15 * 1e3;
 
-    const double k_w_minus = 200;
+    const double k_w_minus = 65;
 
-    const double u_w_minus = 0.016;
+    const double u_w_minus = 0.03;
 
-    const double tau_w_plus = 280 * 1e3;
+    const double tau_w_plus = 200 * 1e3;
 
-    const double tau_fi = 0.078 * 1e3;
+    const double tau_fi = 0.11 * 1e3;
 
-    const double tau_01 = 410 * 1e3;
+    const double tau_01 = 400 * 1e3;
 
-    const double tau_02 = 7 * 1e3;
+    const double tau_02 = 6 * 1e3;
 
-    const double tau_so_1 = 91 * 1e3;
+    const double tau_so_1 = 30.0181 * 1e3;
 
-    const double tau_so_2 = 0.8 * 1e3;
+    const double tau_so_2 = 0.9957 * 1e3;
 
-    const double k_so = 2.1;
+    const double k_so = 2.0458;
 
-    const double u_so = 0.6;
+    const double u_so = 0.65;
 
     const double tau_s1 = 2.7342 * 1e3;
 
-    const double tau_s2 = 4 * 1e3;
+    const double tau_s2 = 16 * 1e3;
 
     const double k_s = 2.0994;
 
     const double u_s = 0.9087;
 
-    const double tau_si = 3.3849 * 1e3;
+    const double tau_si = 1.8875 * 1e3;
 
-    const double tau_w_inf = 0.01 * 1e3;
+    const double tau_w_inf = 0.07 * 1e3;
 
-    const double w_inf_star = 0.5;
+    const double w_inf_star = 0.94;
 
     double H(double x){
         if (x < 0){
