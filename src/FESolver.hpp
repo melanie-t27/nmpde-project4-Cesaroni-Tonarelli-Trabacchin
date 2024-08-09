@@ -61,7 +61,7 @@ public:
     TrilinosWrappers::MPI::Vector& solve_time_step(double time);
 
     // Output.
-    std::future<void> output(unsigned int time_step);
+    void output(unsigned int time_step);
 
     double& getImplicitCoefficient(int cell_index, int q)  {
         return implicit_coefficients[cell_index * quadrature->size() + q];
@@ -83,7 +83,7 @@ public:
         VectorTools::interpolate(dof_handler, *u_0, solution_owned);
         solution = solution_owned;
     }
-     void parallelOutput(TrilinosWrappers::MPI::Vector solution_copy, unsigned int time_step);
+
 private:
 
     double chi = 140 /*1/mm*/ ;
@@ -167,6 +167,8 @@ private:
 
   std::vector<double> implicit_coefficients; 
 
-  std::vector<double> explicit_coefficients; 
+  std::vector<double> explicit_coefficients;
+
+
 };
 #endif
