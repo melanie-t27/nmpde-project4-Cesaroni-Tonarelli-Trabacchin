@@ -169,10 +169,13 @@ public:
     void solve() {
         time = 0.0;
         unsigned int time_step = 0;
+        std::vector<std::future<void>> futures;
         fe_solver->output(time_step);
-        while(time < T) {
+        int tmp = 0;
+        while(time < T && tmp < 3) {
             time += deltat;
             time_step++;
+            tmp++;
             pcout << "solving time step " << time_step << std::endl; 
             auto start2 = std::chrono::high_resolution_clock::now();
             coupler->solveOde(*this);
@@ -180,11 +183,14 @@ public:
             std::cout << "mpi rank " << mpi_rank << " ODE time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop2 - start2).count() << std::endl;
             coupler->solveFE(*this, time);
             auto start1 = std::chrono::high_resolution_clock::now();
-            fe_solver->output(time_step);
+            std::future<void> f = fe_solver->output(time_step);
+            futures.push_back(std::move(f));
             auto stop1 = std::chrono::high_resolution_clock::now();
             std::cout << "mpi rank " << mpi_rank  << " output time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count() << " start time : " << std::chrono::time_point_cast<std::chrono::microseconds>(start1).time_since_epoch().count() << " stop time : " << std::chrono::time_point_cast<std::chrono::microseconds>(stop1).time_since_epoch().count()  << std::endl;
-
-            
+        }
+        std::cout << "finishing" << std::endl;
+        for(auto& f : futures) {
+            f.get();
         }
     }
 

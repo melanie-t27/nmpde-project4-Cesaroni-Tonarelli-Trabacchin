@@ -177,6 +177,11 @@ void FESolver::assemble_Z_matrix_in_parallel(){
     ScratchData scratch_data(*fe, *quadrature, update_values | update_gradients | update_quadrature_points | update_JxW_values);
     PerTaskData per_task_data(*fe);
     WorkStream::run(dof_handler.begin_active(), dof_handler.end(), [this](const auto& cell, ScratchData& scratch, PerTaskData& data){this->assemble_Z_matrix_on_one_cell(cell, scratch, data);} ,[this](const PerTaskData& data){this->copy_local_to_global(data);}, scratch_data, per_task_data);
+    Z_matrix.compress(VectorOperation::add);
+
+    lhs_matrix.copy_from(mass_matrix);
+    lhs_matrix.add(theta, stiffness_matrix);
+    lhs_matrix.add(1.0, Z_matrix);
 }
 
 
@@ -236,10 +241,10 @@ FESolver::solve_time_step(double time)
 {
   I_app->set_time(time);
   auto start1 = std::chrono::high_resolution_clock::now();
-  assemble_Z_matrix();
+  assemble_Z_matrix_in_parallel();
   auto stop1 = std::chrono::high_resolution_clock::now();
-  std::cout << "mpi rank " << mpi_rank << " matrix Z assemble time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count() << std::endl;
-
+  //std::cout << "mpi rank " << mpi_rank << " matrix Z assemble time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count() << std::endl;
+  std::cout << "mpi rank " << mpi_rank << " matrix Z assemble time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count() << " start time : " << std::chrono::time_point_cast<std::chrono::microseconds>(start1).time_since_epoch().count() << " stop time : " << std::chrono::time_point_cast<std::chrono::microseconds>(stop1).time_since_epoch().count()  << std::endl;
 
   auto start2 = std::chrono::high_resolution_clock::now();
   assemble_rhs(time);
@@ -263,11 +268,12 @@ FESolver::solve_time_step(double time)
 }
 
 
-void
+std::future<void>
 FESolver::output(unsigned int time_step)
 {
   TrilinosWrappers::MPI::Vector solution_copy(solution);
   auto f = std::async(std::launch::async, &FESolver::parallelOutput, this, solution_copy , time_step);
+  return f;
 }
 
 void

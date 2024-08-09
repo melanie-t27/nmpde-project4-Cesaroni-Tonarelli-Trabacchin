@@ -61,7 +61,7 @@ public:
     TrilinosWrappers::MPI::Vector& solve_time_step(double time);
 
     // Output.
-    void output(unsigned int time_step);
+    std::future<void> output(unsigned int time_step);
 
     double& getImplicitCoefficient(int cell_index, int q)  {
         return implicit_coefficients[cell_index * quadrature->size() + q];
