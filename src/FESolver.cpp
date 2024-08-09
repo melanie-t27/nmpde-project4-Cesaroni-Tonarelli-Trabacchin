@@ -286,5 +286,4 @@ FESolver::parallelOutput(TrilinosWrappers::MPI::Vector solution_copy, unsigned i
     data_out.add_data_vector(partitioning, "partitioning");
     data_out.build_patches();
     data_out.write_vtu_with_pvtu_record("./", "output", time_step, MPI_COMM_WORLD, 3);
-
 }

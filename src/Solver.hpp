@@ -188,10 +188,10 @@ public:
             auto stop1 = std::chrono::high_resolution_clock::now();
             std::cout << "mpi rank " << mpi_rank  << " output time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count() << " start time : " << std::chrono::time_point_cast<std::chrono::microseconds>(start1).time_since_epoch().count() << " stop time : " << std::chrono::time_point_cast<std::chrono::microseconds>(stop1).time_since_epoch().count()  << std::endl;
         }
-        std::cout << "finishing" << std::endl;
-        for(auto& f : futures) {
-            f.get();
-        }
+        //std::cout << "finishing" << std::endl;
+        //for(auto& f : futures) {
+        //    f.get();
+        //}
     }
 
 
@@ -262,6 +262,8 @@ private:
 
     // DoF handler.
     DoFHandler<dim> dof_handler;
+
+    
 
 
     void init() {
