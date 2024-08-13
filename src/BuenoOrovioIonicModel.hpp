@@ -10,7 +10,7 @@ class BuenoOrovioIonicModel : public IonicModel<K_ion, N_ion> {
 public:
 
    double getAdimensionalU(double v){
-        return (v + 84) / 85.7;
+        return (v + 84.0) / 85.7;
    }
 
    double getDerivative(int index, double u, GatingVariables<N_ion> vars) override{
@@ -51,6 +51,20 @@ public:
 
     virtual double implicit_coefficient(const std::array<double, K_ion>& u, size_t valid_u, GatingVariables<N_ion>& vars) override;
     virtual double explicit_coefficient(const std::array<double, K_ion>& u, size_t valid_u, GatingVariables<N_ion>& vars) override;
+
+
+    double get_FI(double u, GatingVariables<N_ion>& vars) {
+        u = getAdimensionalU(u);
+        return -vars.get(0) * H(u-theta_v)*(u-theta_v)*(u_u-u)/tau_fi;
+    }
+    double get_SO(double u, GatingVariables<N_ion>& vars) {
+        u = getAdimensionalU(u);
+        return u*(1 - H(u - theta_w))/tau_o(u) + H(u - theta_w)/tau_so(u);
+    }
+    double get_SI(double u, GatingVariables<N_ion>& vars) {
+        u = getAdimensionalU(u);
+        return -H(u-theta_w)*vars.get(1)*vars.get(2)/tau_si;
+    }
 
 
 
@@ -140,7 +154,7 @@ protected:
 
     // Tau s
     double tau_s(double u){
-        return (1 - H(u - theta_v)) * tau_s1 + H(u - theta_w) * tau_s2;
+        return (1 - H(u - theta_w)) * tau_s1 + H(u - theta_w) * tau_s2;
     }
 
     // Tau o

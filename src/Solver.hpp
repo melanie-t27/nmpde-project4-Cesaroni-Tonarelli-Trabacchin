@@ -190,6 +190,9 @@ public:
             #ifndef CHECK_ACTIVATION_TIMES
             fe_solver->output(time_step);
             #endif
+            if(time_step % 100 == 0) {
+                fe_solver -> output(time_step);
+            }
             auto stop1 = std::chrono::high_resolution_clock::now();
             //std::cout << "mpi rank " << mpi_rank  << " output time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count() << " start time : " << std::chrono::time_point_cast<std::chrono::microseconds>(start1).time_since_epoch().count() << " stop time : " << std::chrono::time_point_cast<std::chrono::microseconds>(stop1).time_since_epoch().count()  << std::endl;
             #ifdef CHECK_ACTIVATION_TIMES
@@ -334,8 +337,8 @@ private:
 
       auto [first, last] = getFESolutionOwned().local_range();
       for(size_t i=first; i<last; i++){
-          if(getFESolutionOwned()[i] > 0){
-              std::cout << "updated activation time" << std::endl;
+          if(std::abs(getFESolutionOwned()[i] - 0.1) < 0){
+              //std::cout << "updated activation time" << std::endl;
               activation_times_owned[i] = time;
           }
       }

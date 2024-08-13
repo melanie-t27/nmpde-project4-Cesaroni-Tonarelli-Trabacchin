@@ -13,6 +13,9 @@ public:
     virtual double implicit_coefficient(const std::array<double, K_ion>& u, size_t valid_u, GatingVariables<N_ion>& vars);
     virtual double explicit_coefficient(const std::array<double, K_ion>& u, size_t valid_u, GatingVariables<N_ion>& vars);
     virtual std::tuple<double, double> getExpansionCoefficients(int index, double u);
+    virtual double get_FI(double u, GatingVariables<N_ion>& vars) = 0;
+    virtual double get_SO(double u, GatingVariables<N_ion>& vars) = 0;
+    virtual double get_SI(double u, GatingVariables<N_ion>& vars) = 0;
 
     /*virtual double implicit_coefficient(std::array<double, K> u, double v, double w, double s);
     virtual double explicit_coefficient(std::array<double, K> u, double v, double w, double s);*/

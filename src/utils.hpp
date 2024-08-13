@@ -69,8 +69,8 @@ public:
     virtual double
     value(const Point<dim> & p, const unsigned int /*component*/ = 0) const override
     {
-        if(p[0] <= 0.15 && p[1] <= 0.15 && p[2] <= 0.15 /*millimeters*/ & this->get_time() <= 2 /* millisecond */) {
-            return 50.0 /* mA/(mm)^3 */;
+        if(p[0] <= 1.5 && p[1] <= 1.5 && p[2] <= 1.5 /*millimeters*/ && this->get_time() <= 2.0 /* millisecond */) {
+            return 50.0 /* uA/(mm)^3 */;
         }
         return 0.0;
     }
@@ -82,7 +82,7 @@ class U_0 : public Function<dim> {
         virtual double
         value(const Point<dim> & /*p*/, const unsigned int /*component*/ = 0) const override
         {
-            return -84; /*mV*/
+            return -84.0; /*mV*/
         }
 };
 

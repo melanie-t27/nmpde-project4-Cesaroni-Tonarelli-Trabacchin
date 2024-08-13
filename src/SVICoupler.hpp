@@ -53,6 +53,7 @@ public:
         std::array<double, K_ion> history_u;
         std::vector<double> new_history_item;
         new_history_item.resize(solver.getMesh().n_active_cells() * n_q+1);
+        bool done = false;
         for(const auto &cell : dofHandler.active_cell_iterators()) {
             if (!cell->is_locally_owned())
                 continue;
@@ -60,6 +61,8 @@ public:
             cell->get_dof_indices(local_dof_indices);
 
             for(unsigned int q = 0; q < n_q; q++) {
+                
+                memset(&interpolated_values, 0, sizeof(double) * (N_ion + 1));
                 for (unsigned int i = 0; i < dofs_per_cell; ++i) {
                     double shape_value = fe_values.shape_value(i, q);
                     size_t local_index = local_dof_indices[i];
@@ -82,6 +85,24 @@ public:
                 }
                 solver.getImplicitCoefficient(cell->active_cell_index(), q) = ionicModel->implicit_coefficient(history_u, std::min(K_ion, solver.getSolSize()), vars);
                 solver.getExplicitCoefficient(cell->active_cell_index(), q) = ionicModel->explicit_coefficient(history_u, std::min(K_ion, solver.getSolSize()), vars);
+                if(!done && fe_values.quadrature_point(q).norm_square() < 0.1) {
+                    std::cout << "u = " << interpolated_values[N_ion] << std::endl;
+                    for(int i = 0; i < N_ion; i++) {
+                        std::cout << "gate var " << i << "  = " << gate_vars[i][local_dof_indices[0]] << std::endl;
+                    }
+                    std::cout << "ionic current = " << 0.01 * 140 * 85.7 * (solver.getImplicitCoefficient(cell->active_cell_index(), q) * (interpolated_values[N_ion] + 84.0)/85.7  + solver.getExplicitCoefficient(cell->active_cell_index(), q)) << std::endl;
+                    std::cout << "ionic current FI = " << 0.01 * 140 * 85.7 * ionicModel->get_FI(interpolated_values[N_ion], vars) << std::endl;
+                    std::cout << "ionic current SO = " << 0.01 * 140 * 85.7 * ionicModel->get_SO(interpolated_values[N_ion], vars) << std::endl;
+                    std::cout << "ionic current SI = " << 0.01 * 140 * 85.7 * ionicModel->get_SI(interpolated_values[N_ion], vars) << std::endl;
+                    done = true;
+                }
+                /*if(solver.getExplicitCoefficient(cell->active_cell_index(), q) != 0.0 && solver.getImplicitCoefficient(cell->active_cell_index(), q) != 0.0) {
+                    std::cout << "ok" << std::endl;
+                }
+
+                if(solver.getExplicitCoefficient(cell->active_cell_index(), q) == 0.0 && solver.getImplicitCoefficient(cell->active_cell_index(), q) == 0.0 && history_u[0] > -57.0) {
+                    std::cout << "wtf" << std::endl;
+                }*/
             }
         }
 
