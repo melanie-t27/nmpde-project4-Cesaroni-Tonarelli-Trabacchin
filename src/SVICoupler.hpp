@@ -52,7 +52,7 @@ public:
         std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
         std::array<double, K_ion> history_u;
         std::vector<double> new_history_item;
-        new_history_item.resize(solver.getMesh().n_active_cells() * n_q+1);
+        new_history_item.resize(solver.getMesh().n_active_cells() * n_q);
         bool done = false;
         for(const auto &cell : dofHandler.active_cell_iterators()) {
             if (!cell->is_locally_owned())

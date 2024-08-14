@@ -3,7 +3,6 @@
 #include <array>
 #include <vector>
 #include "utils.hpp"
-#include "ODESolver.hpp"
 #include "VectorView.hpp"
 
 template<int K_ode, int K_ion, int N_ion>
