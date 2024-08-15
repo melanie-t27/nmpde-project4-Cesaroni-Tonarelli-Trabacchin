@@ -52,7 +52,7 @@ public:
         std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
         std::array<double, K_ion> history_u;
         std::vector<double> new_history_item;
-        new_history_item.resize(solver.getMesh().n_active_cells() * n_q+1);
+        new_history_item.resize(solver.getMesh().n_active_cells() * n_q);
         bool done = false;
         for(const auto &cell : dofHandler.active_cell_iterators()) {
             if (!cell->is_locally_owned())
@@ -85,7 +85,7 @@ public:
                 }
                 solver.getImplicitCoefficient(cell->active_cell_index(), q) = ionicModel->implicit_coefficient(history_u, std::min(K_ion, solver.getSolSize()), vars);
                 solver.getExplicitCoefficient(cell->active_cell_index(), q) = ionicModel->explicit_coefficient(history_u, std::min(K_ion, solver.getSolSize()), vars);
-                if(!done && fe_values.quadrature_point(q).norm_square() < 0.1) {
+                /*if(!done && fe_values.quadrature_point(q).norm_square() < 0.1) {
                     std::cout << "u = " << interpolated_values[N_ion] << std::endl;
                     for(int i = 0; i < N_ion; i++) {
                         std::cout << "gate var " << i << "  = " << gate_vars[i][local_dof_indices[0]] << std::endl;
@@ -95,7 +95,7 @@ public:
                     std::cout << "ionic current SO = " << 0.01 * 140 * 85.7 * ionicModel->get_SO(interpolated_values[N_ion], vars) << std::endl;
                     std::cout << "ionic current SI = " << 0.01 * 140 * 85.7 * ionicModel->get_SI(interpolated_values[N_ion], vars) << std::endl;
                     done = true;
-                }
+                }*/
                 /*if(solver.getExplicitCoefficient(cell->active_cell_index(), q) != 0.0 && solver.getImplicitCoefficient(cell->active_cell_index(), q) != 0.0) {
                     std::cout << "ok" << std::endl;
                 }

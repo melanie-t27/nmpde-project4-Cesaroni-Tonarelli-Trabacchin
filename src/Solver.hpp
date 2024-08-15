@@ -336,15 +336,14 @@ private:
     void compute_activation_times(double time) {
 
       auto [first, last] = getFESolutionOwned().local_range();
-      for(size_t i=first; i<last; i++){
-          if(std::abs(getFESolutionOwned()[i] - 0.1) < 0){
+      for(size_t i=first; i<last; i++) {
+          if(getFESolutionOwned()[i] > 0 && activation_times_owned[i] < 0.000001){
               //std::cout << "updated activation time" << std::endl;
               activation_times_owned[i] = time;
           }
       }
 
       activation_times = activation_times_owned;
-
 
   }
 

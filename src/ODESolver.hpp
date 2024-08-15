@@ -12,7 +12,7 @@ public:
 
     ODESolver(double theta_, double deltat_, std::shared_ptr<IonicModel<K_ion, N_ion>> ionic_model_) :
         theta(theta_),
-        deltat(deltat_),
+        deltat(deltat_/1000.0),
         ionic_model(ionic_model_)
     {}
 

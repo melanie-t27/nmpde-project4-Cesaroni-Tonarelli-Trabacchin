@@ -21,10 +21,10 @@ int main(int argc, char *argv[]){
 
     const unsigned int degree = 1;
 
-    const double T     = 20.0;
+    const double T     = 50.0;
     const double theta_fe = 0.5;
     const double theta_ode = 0.5;
-    const double deltat = 0.1/2.0;
+    const double deltat = 0.05;
 
     std::unique_ptr<U_0<dim>> u_0 = std::make_unique<U_0<dim>>();
     std::array<std::unique_ptr<Function<dim>>, 3> gating_variables_0{{std::make_unique<GatingVariable_V0<dim>>(), std::make_unique<GatingVariable_W0<dim>>(), std::make_unique<GatingVariable_S0<dim>>() }};
