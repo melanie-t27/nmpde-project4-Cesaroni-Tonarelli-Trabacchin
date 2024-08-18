@@ -11,7 +11,6 @@ public:
         double u_adim = this->getAdimensionalU(u[0]);
         return -(vars.get(0) * this->H(u_adim - this->theta_v) * (this->u_u - u_adim)) / this->tau_fi 
                     + (1 - this->H(u_adim - this->theta_w)) / this->tau_o(u_adim);
-        return 0.0;
     }
 
     double explicit_coefficient(const std::array<double, K_ion>& u, size_t /*valid_u*/, GatingVariables<N_ion>& vars) override {
