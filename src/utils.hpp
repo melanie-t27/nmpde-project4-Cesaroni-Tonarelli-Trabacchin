@@ -56,10 +56,10 @@ class D : public TensorFunction<2, dim>
         }
 
     private:
-        double sigma_il = 0.17; /*S/m*/
-        double sigma_it = 0.019;
-        double sigma_el = 0.62;
-        double sigma_et = 0.24;
+        double sigma_il = 0.17 / 1000; /*S/m*/
+        double sigma_it = 0.019 / 1000;
+        double sigma_el = 0.62 / 1000;
+        double sigma_et = 0.24 / 1000;
 };
 
 template <int dim>
@@ -70,7 +70,7 @@ public:
     value(const Point<dim> & p, const unsigned int /*component*/ = 0) const override
     {
         if(p[0] <= 1.5 && p[1] <= 1.5 && p[2] <= 1.5 /*millimeters*/ && this->get_time() <= 2.0 /* millisecond */) {
-            return 50.0 /* uA/(mm)^3 */;
+            return 50.0 / 1000/* uA/(mm)^3 */;
         }
         return 0.0;
     }
