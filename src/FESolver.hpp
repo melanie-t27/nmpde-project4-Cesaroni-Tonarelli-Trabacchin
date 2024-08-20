@@ -88,7 +88,7 @@ private:
 
     double chi = 140 /*1/mm*/ ;
 
-    double C_m = 0.01 /*microF/(mm)^-2*/;
+    double C_m = 0.01 /*microF/(mm)^2*/;
   
 
   // MPI parallel. /////////////////////////////////////////////////////////////

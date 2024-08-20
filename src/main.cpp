@@ -21,7 +21,7 @@ int main(int argc, char *argv[]){
 
     const unsigned int degree = 1;
 
-    const double T     = 50.0;
+    const double T     = 50;
     const double theta_fe = 0.5;
     const double theta_ode = 0.5;
     const double deltat = 0.05;

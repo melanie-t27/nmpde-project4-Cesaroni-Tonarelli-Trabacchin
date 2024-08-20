@@ -11,6 +11,7 @@ public:
 
    double getAdimensionalU(double v){
         return (v + 84.0) / 85.7;
+        //return v;
    }
 
    double getDerivative(int index, double u, GatingVariables<N_ion> vars) override{
@@ -85,45 +86,45 @@ protected:
 
     const double theta_0 = 0.006;
 
-    const double tau_v1_minus = 60;// * 1e3;
+    const double tau_v1_minus = 60;
 
-    const double tau_v2_minus = 1150;// * 1e3;//check!!!!!
+    const double tau_v2_minus = 1150;//check!!!!!
 
-    const double tau_v_plus = 1.4506;// * 1e3;
+    const double tau_v_plus = 1.4506;
 
-    const double tau_w1_minus = 60;// *1e3;
+    const double tau_w1_minus = 60;
 
-    const double tau_w2_minus = 15;// * 1e3;
+    const double tau_w2_minus = 15;
 
     const double k_w_minus = 65;
 
     const double u_w_minus = 0.03;
 
-    const double tau_w_plus = 200;// * 1e3;
+    const double tau_w_plus = 200;
 
-    const double tau_fi = 0.11;// * 1e3;
+    const double tau_fi = 0.11;
 
-    const double tau_01 = 400;// * 1e3;
+    const double tau_01 = 400;
 
-    const double tau_02 = 6;// * 1e3;
+    const double tau_02 = 6;
 
-    const double tau_so_1 = 30.0181;// * 1e3;
+    const double tau_so_1 = 30.0181;
 
-    const double tau_so_2 = 0.9957;// * 1e3;
+    const double tau_so_2 = 0.9957;
 
     const double k_so = 2.0458;
 
     const double u_so = 0.65;
 
-    const double tau_s1 = 2.7342;// * 1e3;
+    const double tau_s1 = 2.7342;
 
-    const double tau_s2 = 16;// * 1e3;
+    const double tau_s2 = 16;
 
     const double k_s = 2.0994;
 
     const double u_s = 0.9087;
 
-    const double tau_si = 1.8875;// * 1e3;
+    const double tau_si = 1.8875;
 
     const double tau_w_inf = 0.07;//  * 1e3;
 
