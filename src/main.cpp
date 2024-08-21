@@ -21,10 +21,10 @@ int main(int argc, char *argv[]){
 
     const unsigned int degree = 1;
     // Default values
-    double T     = 50;
-    double theta_fe = 1.0;
-    double theta_ode = 0.0;
-    double deltat = 0.05;
+    double T     = 0.05;
+    double theta_fe = 0.5;
+    double theta_ode = 0.5;
+    double deltat = 0.05/1000;
     std::string filename = "../meshes/cuboid.msh";
 
     // Process command line arguments

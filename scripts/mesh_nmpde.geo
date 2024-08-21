@@ -1,8 +1,8 @@
 // Parameters
-Lx = 20; // Length of the cuboid in the x direction
-Ly = 7;  // Length of the cuboid in the y direction
-Lz = 3;  // Length of the cuboid in the z direction
-lc = 0.094; // Discretization step
+Lx = 0.020; // Length of the cuboid in the x direction
+Ly = 0.007;  // Length of the cuboid in the y direction
+Lz = 0.003;  // Length of the cuboid in the z direction
+lc = 0.000094; // Discretization step
 
 // Create the vertices of the cuboid
 Point(1) = {0, 0, 0, lc};
@@ -63,4 +63,4 @@ Mesh 3;
 
 // Save the mesh to a file
 Mesh.Format = 1; // Set the file format (1 = MSH format)
-Save "cuboid.msh";
+Save "cuboid_v2.msh";

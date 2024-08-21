@@ -10,7 +10,7 @@ class BuenoOrovioIonicModel : public IonicModel<K_ion, N_ion> {
 public:
 
    double getAdimensionalU(double v){
-        return (v + 84.0) / 85.7;
+        return (1000.0*v + 84.0) / 85.7;
         //return v;
    }
 
