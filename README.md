@@ -19,5 +19,5 @@ $ make
 ```
 The executable will be created into `build`, and can be executed through
 ```bash
-$ ./executable-name
+$ mpirun -n 3 nmpde -fn ../meshes/cuboid.msh -T 20 -dT 5e-3 -tfe 0.5 -tode 0.5
 ```
