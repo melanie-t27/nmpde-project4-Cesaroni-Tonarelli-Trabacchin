@@ -19,7 +19,7 @@ $ make
 ```
 The executable will be created into `build`, and can be executed through
 ```bash
-$ mpirun -n 3 nmpde -fn ../meshes/cuboid.msh -T 20 -dT 5e-3 -tfe 0.5 -tode 0.5
+$ mpirun -n 3 nmpde -fn ../meshes/cuboid_v2.msh -T 0.05 -dT 5e-3 -tfe 0.5 -tode 0.5
 
 $ gmsh mesh_nmpde.geo -3
 ```

@@ -70,7 +70,7 @@ public:
     virtual double
     value(const Point<dim> & p, const unsigned int /*component*/ = 0) const override
     {
-        if(p[0] <= 1.5 && p[1] <= 1.5 && p[2] <= 1.5 /*millimeters*/ && this->get_time() <= 0.002 /* milliseconds */) {
+        if(p[0] <= 1.5e-3 && p[1] <= 1.5e-3 && p[2] <= 1.5e-3 /*millimeters*/ && this->get_time() <= 0.002 /* milliseconds */) {
             return 50000;//;6.3 * 1000;/* nA/(mm)^3 */;
         }
         return 0.0;
