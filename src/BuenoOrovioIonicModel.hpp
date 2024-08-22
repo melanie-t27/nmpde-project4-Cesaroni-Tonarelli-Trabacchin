@@ -100,7 +100,7 @@ protected:
 
     const double u_w_minus = 0.03;
 
-    const double tau_w_plus = 200;
+    const double tau_w_plus = 280;
 
     const double tau_fi = 0.11;
 

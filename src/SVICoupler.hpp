@@ -85,7 +85,7 @@ public:
                 }
                 solver.getImplicitCoefficient(cell->active_cell_index(), q) = ionicModel->implicit_coefficient(history_u, std::min(K_ion, solver.getSolSize()), vars);
                 solver.getExplicitCoefficient(cell->active_cell_index(), q) = ionicModel->explicit_coefficient(history_u, std::min(K_ion, solver.getSolSize()), vars);
-                if(!done && fe_values.quadrature_point(q).norm_square() < 0.1) {
+                if(!done && fe_values.quadrature_point(q).norm_square() < 0.0000001) {
                     std::cout << "u = " << interpolated_values[N_ion] << std::endl;
                     for(int i = 0; i < N_ion; i++) {
                         std::cout << "gate var " << i << "  = " << gate_vars[i][local_dof_indices[0]] << std::endl;
