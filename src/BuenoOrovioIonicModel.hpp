@@ -9,12 +9,12 @@ template<int K_ion, int N_ion>
 class BuenoOrovioIonicModel : public IonicModel<K_ion, N_ion> {
 public:
 
-   double getAdimensionalU(double v){
+    double getAdimensionalU(double v){
         return (1000.0*v + 84.0) / 85.7;
         //return v;
-   }
+    }
 
-   double getDerivative(int index, double u, GatingVariables<N_ion> vars) override{
+    double getDerivative(int index, double u, GatingVariables<N_ion> vars) override{
         u = getAdimensionalU(u);
         if(index == 0) {
             return ((1 - H(u - theta_v))*(v_inf(u) - vars.get(0))) / (tau_v_minus(u)) - ((H(u - theta_v))*vars.get(0))/(tau_v_plus);
@@ -100,7 +100,7 @@ protected:
 
     const double u_w_minus = 0.03;
 
-    const double tau_w_plus = 200;
+    const double tau_w_plus = 280;
 
     const double tau_fi = 0.11;
 

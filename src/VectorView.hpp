@@ -9,12 +9,12 @@ public:
         return vec[index + offset];
     }
 
-    TrilinosWrappers::internal::VectorReference operator[](int index) {
+    /*TrilinosWrappers::internal::VectorReference operator[](int index) {
         return vec(index + offset);
-    }
+    }*/
 
     double operator[](int index) const {
-        return vec(index + offset);
+        return vec[index + offset];
     }
 
     void set(size_t index, double value) {

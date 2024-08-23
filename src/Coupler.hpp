@@ -40,8 +40,8 @@ class Coupler {
 public:
     virtual void solveOde(Solver<K_ode, K_ion, N_ion>& solver);
     virtual void solveFE(Solver<K_ode, K_ion, N_ion>& solver, double time);
-    virtual void setInitialGatingVariables(Solver<K_ode, K_ion, N_ion>& solver, 
-        std::array<std::unique_ptr<Function<dim>>, N_ion> gate_vars_0);
+    virtual void setInitialGatingVariables(Solver<K_ode, K_ion, N_ion>& solver,
+                                           std::array<std::unique_ptr<Function<dim>>, N_ion> gate_vars_0);
 
     virtual ~Coupler() {}
 };

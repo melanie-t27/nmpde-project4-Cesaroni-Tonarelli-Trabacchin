@@ -8,6 +8,8 @@
 #include "BuenoOrovioIonicModelIon2.hpp"
 #include "BuenoOrovioIonicModelIon1.hpp"
 #include "SVICoupler.hpp"
+#include "ICICoupler.hpp"
+#include "QCoupler.hpp"
 #include <array>
 #include <memory>
 
@@ -47,12 +49,12 @@ int main(int argc, char *argv[]){
         else if (std::string(argv[i]) == "-dT" && i + 1 < argc){
             deltat = std::stod(argv[i + 1]);
             ++i;
-        }  
+        }
         else if (std::string(argv[i]) == "-tfe" && i + 1 < argc){
             theta_fe = std::stod(argv[i + 1]);
             ++i;
         }
-         else if (std::string(argv[i]) == "-tode" && i + 1 < argc){
+        else if (std::string(argv[i]) == "-tode" && i + 1 < argc){
             theta_ode = std::stod(argv[i + 1]);
             ++i;
         } else {
@@ -67,7 +69,7 @@ int main(int argc, char *argv[]){
     std::unique_ptr<U_0<dim>> u_0 = std::make_unique<U_0<dim>>();
     std::array<std::unique_ptr<Function<dim>>, 3> gating_variables_0{{std::make_unique<GatingVariable_V0<dim>>(), std::make_unique<GatingVariable_W0<dim>>(), std::make_unique<GatingVariable_S0<dim>>() }};
     std::shared_ptr<BuenoOrovioIonicModelIon1<1,3>> ionic_model = std::make_shared<BuenoOrovioIonicModelIon1<1,3>>();
-    std::shared_ptr<SVICoupler<1,1,3>> coupler = std::make_shared<SVICoupler<1,1,3>>();
+    std::shared_ptr<ICICoupler<1,1,3>> coupler = std::make_shared<ICICoupler<1,1,3>>();
     std::unique_ptr<Iapp<dim>> I_app = std::make_unique<Iapp<dim>>();
     std::unique_ptr<D<dim>> d = std::make_unique<D<dim>>();
     Solver<1,1,3> solver(filename, degree, T, deltat, theta_fe, theta_ode, ionic_model, coupler, std::move(d), std::move(I_app), std::move(u_0), gating_variables_0);

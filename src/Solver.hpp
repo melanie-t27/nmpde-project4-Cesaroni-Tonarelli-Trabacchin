@@ -21,33 +21,33 @@ class Solver {
 public:
     // Constructor. We provide the final time, time step Delta t and theta method
     // parameter as constructor arguments.
-    Solver( 
-         const std::string &mesh_file_name_,
-         const unsigned int &r_,
-         const double       &T_,
-         const double       &deltat_,
-         const double       &fe_theta_,
-         const double       &ode_theta_,
-         std::shared_ptr<IonicModel<K_ion, N_ion>> ionic_model_,
-         std::shared_ptr<Coupler<K_ode, K_ion, N_ion>> coupler_,
-         std::unique_ptr<TensorFunction<2, dim>> d_, 
-         std::unique_ptr<Function<dim>> I_app_,
-         std::unique_ptr<Function<dim>> u_0,
-         std::array<std::unique_ptr<Function<dim>>, N_ion>& gate_vars_0
-         )
-            : mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD))
-            , mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD))
-            , pcout(std::cout, mpi_rank == 0)
-            , T(T_)
-            , mesh_file_name(mesh_file_name_)
-            , r(r_)
-            , deltat(deltat_)
-            , fe_theta(fe_theta_)
-            , ode_theta(ode_theta_)
-            , mesh(MPI_COMM_WORLD)
-            , ionic_model(ionic_model_)
-            , coupler(coupler_)
-            , ode_solver(ode_theta_, deltat_, ionic_model_)
+    Solver(
+            const std::string &mesh_file_name_,
+            const unsigned int &r_,
+            const double       &T_,
+            const double       &deltat_,
+            const double       &fe_theta_,
+            const double       &ode_theta_,
+            std::shared_ptr<IonicModel<K_ion, N_ion>> ionic_model_,
+            std::shared_ptr<Coupler<K_ode, K_ion, N_ion>> coupler_,
+            std::unique_ptr<TensorFunction<2, dim>> d_,
+            std::unique_ptr<Function<dim>> I_app_,
+            std::unique_ptr<Function<dim>> u_0,
+            std::array<std::unique_ptr<Function<dim>>, N_ion>& gate_vars_0
+    )
+    : mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD))
+    , mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD))
+    , pcout(std::cout, mpi_rank == 0)
+    , T(T_)
+    , mesh_file_name(mesh_file_name_)
+    , r(r_)
+    , deltat(deltat_)
+    , fe_theta(fe_theta_)
+    , ode_theta(ode_theta_)
+    , mesh(MPI_COMM_WORLD)
+    , ionic_model(ionic_model_)
+    , coupler(coupler_)
+    , ode_solver(ode_theta_, deltat_, ionic_model_)
     {
 
         init();
@@ -55,10 +55,10 @@ public:
         fe_solver->setup();
         fe_solver->setInitialSolution(std::move(u_0));
         coupler->setInitialGatingVariables(*this, std::move(gate_vars_0));
-        #ifdef CHECK_ACTIVATION_TIMES
+#ifdef CHECK_ACTIVATION_TIMES
         std::cout << "checking activation times" << std::endl;
         activation_times_init();
-        #endif
+#endif
 
     }
 
@@ -174,9 +174,9 @@ public:
     void solve() {
         time = 0.0;
         unsigned int time_step = 0;
-        #ifndef CHECK_ACTIVATION_TIMES
+#ifndef CHECK_ACTIVATION_TIMES
         fe_solver->output(time_step);
-        #endif
+#endif
         while(time < T) {
             time += deltat;
             time_step++;
@@ -187,26 +187,26 @@ public:
             //std::cout << "mpi rank " << mpi_rank << " ODE time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop2 - start2).count() << std::endl;
             coupler->solveFE(*this, time);
             auto start1 = std::chrono::high_resolution_clock::now();
-            #ifndef CHECK_ACTIVATION_TIMES
+#ifndef CHECK_ACTIVATION_TIMES
             fe_solver->output(time_step);
-            #endif
+#endif
             if(time_step % 100 == 0) {
                 fe_solver -> output(time_step);
             }
             auto stop1 = std::chrono::high_resolution_clock::now();
             //std::cout << "mpi rank " << mpi_rank  << " output time : " << std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count() << " start time : " << std::chrono::time_point_cast<std::chrono::microseconds>(start1).time_since_epoch().count() << " stop time : " << std::chrono::time_point_cast<std::chrono::microseconds>(stop1).time_since_epoch().count()  << std::endl;
-            #ifdef CHECK_ACTIVATION_TIMES
+#ifdef CHECK_ACTIVATION_TIMES
             compute_activation_times(time);
-            #endif
+#endif
         }
         //std::cout << "finishing" << std::endl;
         //for(auto& f : futures) {
         //    f.get();
         //}
-        #ifdef CHECK_ACTIVATION_TIMES
+#ifdef CHECK_ACTIVATION_TIMES
         output_activation_times();
         fe_solver->output(time_step);
-        #endif
+#endif
 
     }
 
@@ -223,12 +223,12 @@ private:
 
     // Parallel output stream.
     ConditionalOStream pcout;
-    
+
     // Problem definition. ///////////////////////////////////////////////////////
 
     // Current time.
     double time;
-    
+
     // Final time.
     double T;
 
@@ -279,7 +279,7 @@ private:
     // DoF handler.
     DoFHandler<dim> dof_handler;
 
-    
+
 
 
     void init() {

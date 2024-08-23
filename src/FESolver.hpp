@@ -14,13 +14,13 @@ public:
             const double       &T_,
             const double       &deltat_,
             const double       &theta_,
-            parallel::fullydistributed::Triangulation<dim>& mesh_, 
+            parallel::fullydistributed::Triangulation<dim>& mesh_,
             std::shared_ptr<FiniteElement<dim>> fe_,
-            std::shared_ptr<Quadrature<dim>> quadrature_, 
+            std::shared_ptr<Quadrature<dim>> quadrature_,
             DoFHandler<dim>& dof_handler_,
             std::unique_ptr<TensorFunction<2, dim>> d_,
             std::unique_ptr<Function<dim>> I_app_
-            )
+    )
             : mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD))
             , mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD))
             , pcout(std::cout, mpi_rank == 0)
@@ -40,7 +40,7 @@ public:
     }
 
     // Initialization.
-    void setup(); 
+    void setup();
 
     // Assemble the mass and stiffness matrices.
     void assemble_matrices();
@@ -89,85 +89,85 @@ private:
     double chi = 140000 /*1/mm*/ ;
 
     double C_m = 0.01 /*microF/(mm)^2*/;
-  
 
-  // MPI parallel. /////////////////////////////////////////////////////////////
 
-  // Number of MPI processes.
+    // MPI parallel. /////////////////////////////////////////////////////////////
+
+    // Number of MPI processes.
     const unsigned int mpi_size;
 
-  // This MPI process.
-  const unsigned int mpi_rank;
+    // This MPI process.
+    const unsigned int mpi_rank;
 
-  // Parallel output stream.
-  ConditionalOStream pcout;
+    // Parallel output stream.
+    ConditionalOStream pcout;
 
-  // Problem definition. ///////////////////////////////////////////////////////
+    // Problem definition. ///////////////////////////////////////////////////////
 
-  // Final time.
-  const double T;
+    // Final time.
+    const double T;
 
-  // Discretization. ///////////////////////////////////////////////////////////
+    // Discretization. ///////////////////////////////////////////////////////////
 
-  // Polynomial degree.
-  const unsigned int r;
+    // Polynomial degree.
+    const unsigned int r;
 
-  // Time step.
-  const double deltat;
+    // Time step.
+    const double deltat;
 
-  // Theta parameter of the theta method.
-  const double theta;
+    // Theta parameter of the theta method.
+    const double theta;
 
-  // Mesh.
-  parallel::fullydistributed::Triangulation<dim>& mesh;
+    // Mesh.
+    parallel::fullydistributed::Triangulation<dim>& mesh;
 
-  // Finite element space.
-  std::shared_ptr<FiniteElement<dim>> fe;
+    // Finite element space.
+    std::shared_ptr<FiniteElement<dim>> fe;
 
-  // Quadrature formula.
-  std::shared_ptr<Quadrature<dim>> quadrature;
+    // Quadrature formula.
+    std::shared_ptr<Quadrature<dim>> quadrature;
 
-  // DoF handler.
-  DoFHandler<dim>& dof_handler;
+    // DoF handler.
+    DoFHandler<dim>& dof_handler;
 
-  // DoFs owned by current process.
-  IndexSet locally_owned_dofs;
+    // DoFs owned by current process.
+    IndexSet locally_owned_dofs;
 
-  // DoFs relevant to the current process (including ghost DoFs).
-  IndexSet locally_relevant_dofs;
+    // DoFs relevant to the current process (including ghost DoFs).
+    IndexSet locally_relevant_dofs;
 
-  // Mass matrix M / deltat.
-  TrilinosWrappers::SparseMatrix mass_matrix;
+    // Mass matrix M / deltat.
+    TrilinosWrappers::SparseMatrix mass_matrix;
 
-  // Stiffness matrix K.
-  TrilinosWrappers::SparseMatrix stiffness_matrix;
+    // Stiffness matrix K.
+    TrilinosWrappers::SparseMatrix stiffness_matrix;
 
-  // Matrix on the left-hand size Z.
-  TrilinosWrappers::SparseMatrix Z_matrix;
+    // Matrix on the left-hand size Z.
+    TrilinosWrappers::SparseMatrix Z_matrix;
 
-  // Matrix on the left-hand side (M / deltat + theta A).
-  TrilinosWrappers::SparseMatrix lhs_matrix;
+    // Matrix on the left-hand side (M / deltat + theta A).
+    TrilinosWrappers::SparseMatrix lhs_matrix;
 
-  // Matrix on the right-hand side (M / deltat - (1 - theta) A).
-  TrilinosWrappers::SparseMatrix rhs_matrix;
+    // Matrix on the right-hand side (M / deltat - (1 - theta) A).
+    TrilinosWrappers::SparseMatrix rhs_matrix;
 
-  // Right-hand side vector in the linear system.
-  TrilinosWrappers::MPI::Vector system_rhs;
+    // Right-hand side vector in the linear system.
+    TrilinosWrappers::MPI::Vector system_rhs;
 
-  // System solution (without ghost elements).
-  TrilinosWrappers::MPI::Vector solution_owned;
+    // System solution (without ghost elements).
+    TrilinosWrappers::MPI::Vector solution_owned;
 
-  // System solution (including ghost elements).
-  TrilinosWrappers::MPI::Vector solution;
+    // System solution (including ghost elements).
+    TrilinosWrappers::MPI::Vector solution;
 
 
 
-  std::unique_ptr<TensorFunction<2, dim>> d;
-  std::unique_ptr<Function<dim>> I_app;
+    std::unique_ptr<TensorFunction<2, dim>> d;
+    std::unique_ptr<Function<dim>> I_app;
 
-  std::vector<double> implicit_coefficients; 
+    std::vector<double> implicit_coefficients;
 
-  std::vector<double> explicit_coefficients;
+    std::vector<double> explicit_coefficients;
 
 
 };

@@ -43,24 +43,24 @@ private:
 template <int dim>
 class D : public TensorFunction<2, dim>
 {
-    public:
-        D() : TensorFunction<2, dim>() {}
-        void value_list(const std::vector<Point<dim>> &/*points*/, std::vector<Tensor<2, dim>> & /*values*/) const override {} // do not use it
+public:
+    D() : TensorFunction<2, dim>() {}
+    void value_list(const std::vector<Point<dim>> &/*points*/, std::vector<Tensor<2, dim>> & /*values*/) const override {} // do not use it
 
-        typename TensorFunction<2, dim>::value_type value(const Point<dim> & /*p*/) const override {
-            Tensor<2, dim> sigma = unit_symmetric_tensor<dim>();
-            //return sigma * 1.171e2;
-            sigma[0][0] = sigma_il * sigma_el / (sigma_il + sigma_el);
-            sigma[1][1] = sigma_it * sigma_et / (sigma_it + sigma_et);
-            sigma[2][2] = sigma_it * sigma_et / (sigma_it + sigma_et);
-            return sigma;
-        }
+    typename TensorFunction<2, dim>::value_type value(const Point<dim> & /*p*/) const override {
+        Tensor<2, dim> sigma = unit_symmetric_tensor<dim>();
+        //return sigma * 1.171e2;
+        sigma[0][0] = sigma_il * sigma_el / (sigma_il + sigma_el);
+        sigma[1][1] = sigma_it * sigma_et / (sigma_it + sigma_et);
+        sigma[2][2] = sigma_it * sigma_et / (sigma_it + sigma_et);
+        return sigma;
+    }
 
-    private:
-        double sigma_il = 0.17; /*S/m*/
-        double sigma_it = 0.019;
-        double sigma_el = 0.62;
-        double sigma_et = 0.24;
+private:
+    double sigma_il = 0.17; /*S/m*/
+    double sigma_it = 0.019;
+    double sigma_el = 0.62;
+    double sigma_et = 0.24;
 };
 
 template <int dim>
@@ -79,42 +79,42 @@ public:
 
 template <int dim>
 class U_0 : public Function<dim> {
-    public:
-        virtual double
-        value(const Point<dim> & /*p*/, const unsigned int /*component*/ = 0) const override
-        {
-            return -0.08523; /*mV*/
-        }
+public:
+    virtual double
+    value(const Point<dim> & /*p*/, const unsigned int /*component*/ = 0) const override
+    {
+        return -0.08523; /*mV*/
+    }
 };
 
 template <int dim>
 class GatingVariable_V0 : public Function<dim> {
-    public:
-        virtual double
-        value(const Point<dim> & /*p*/, const unsigned int /*component*/ = 0) const override
-        {
-            return 1.0;
-        }
+public:
+    virtual double
+    value(const Point<dim> & /*p*/, const unsigned int /*component*/ = 0) const override
+    {
+        return 1.0;
+    }
 };
 
 template <int dim>
 class GatingVariable_W0 : public Function<dim> {
-    public:
-        virtual double
-        value(const Point<dim> & /*p*/, const unsigned int /*component*/ = 0) const override
-        {
-            return 1.0;
-        }
+public:
+    virtual double
+    value(const Point<dim> & /*p*/, const unsigned int /*component*/ = 0) const override
+    {
+        return 1.0;
+    }
 };
 
 template <int dim>
 class GatingVariable_S0 : public Function<dim> {
-    public:
-        virtual double
-        value(const Point<dim> & /*p*/, const unsigned int /*component*/ = 0) const override
-        {
-            return 0.0;
-        }
+public:
+    virtual double
+    value(const Point<dim> & /*p*/, const unsigned int /*component*/ = 0) const override
+    {
+        return 0.0;
+    }
 };
 
 struct PerTaskData {
