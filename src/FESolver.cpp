@@ -105,8 +105,10 @@ void FESolver::assemble_matrices() {
 
 
 void FESolver::assemble_Z_matrix() {
-    /*pcout << "===============================================" << std::endl;
-    pcout << "Assembling the Z matrix" << std::endl;
+
+  /*pcout << "===============================================" << std::endl;
+  pcout << "Assembling the Z matrix" << std::endl;
+
 
     const unsigned int dofs_per_cell = fe->dofs_per_cell;
     const unsigned int n_q           = quadrature->size();
@@ -115,9 +117,11 @@ void FESolver::assemble_Z_matrix() {
 
     std::vector<types::global_dof_index> dof_indices(dofs_per_cell);
 
-    FullMatrix<double> cell_Z_matrix(dofs_per_cell, dofs_per_cell);
 
-    Z_matrix = 0.0;*/
+  FullMatrix<double> cell_Z_matrix(dofs_per_cell, dofs_per_cell);
+  
+  Z_matrix = 0.0;*/
+
 /*
   for (const auto &cell : dof_handler.active_cell_iterators())
   {
@@ -143,13 +147,15 @@ void FESolver::assemble_Z_matrix() {
   }
   */
 
-    //Z_matrix.compress(VectorOperation::add);
 
-    // We build the matrix on the left-hand side of the algebraic problem (the one
-    // that we'll invert at each timestep).
-    //lhs_matrix.copy_from(mass_matrix);
-    //lhs_matrix.add(theta, stiffness_matrix);
-    //lhs_matrix.add(1.0, Z_matrix);
+  //Z_matrix.compress(VectorOperation::add);
+
+  // We build the matrix on the left-hand side of the algebraic problem (the one
+  // that we'll invert at each timestep).
+  //lhs_matrix.copy_from(mass_matrix);
+  //lhs_matrix.add(theta, stiffness_matrix);
+  //lhs_matrix.add(1.0, Z_matrix);
+
 }
 
 void FESolver::assemble_Z_matrix_on_one_cell(const auto& cell, ScratchData& scratch, PerTaskData& data){
