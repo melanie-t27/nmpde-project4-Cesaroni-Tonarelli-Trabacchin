@@ -9,6 +9,107 @@ template<int N_ion>
 class BuenoOrovioIonicModel : public IonicModel<N_ion> {
 public:
 
+    BuenoOrovioIonicModel(const int tissue_type){
+        switch(tissue_type){
+            case 0 : // EPI
+                u_0 = 0;
+                u_u = 1.55;
+                theta_v = 0.3;
+                theta_w = 0.13;
+                theta_v_minus = 0.006;
+                theta_0 = 0.006;
+                tau_v1_minus = 60;
+                tau_v2_minus = 1150;
+                tau_v_plus = 1.4506;
+                tau_w1_minus = 60;
+                tau_w2_minus = 15;
+                k_w_minus = 65;
+                u_w_minus = 0.03;
+                tau_w_plus = 280;
+                tau_fi = 0.11;
+                tau_01 = 400;
+                tau_02 = 6;
+                tau_so_1 = 30.0181;
+                tau_so_2 = 0.9957;
+                k_so = 2.0458;
+                u_so = 0.65;
+                tau_s1 = 2.7342;
+                tau_s2 = 16;
+                k_s = 2.0994;
+                u_s = 0.9087;
+                tau_si = 1.8875;
+                tau_w_inf = 0.07;
+                w_inf_star = 0.94;
+                break;
+            
+            case 1 : // MID
+                u_0 = 0;
+                u_u = 1.55;
+                theta_v = 0.3;
+                theta_w = 0.13;
+                theta_v_minus = 0.006;
+                theta_0 = 0.006;
+                tau_v1_minus = 60;
+                tau_v2_minus = 1150;
+                tau_v_plus = 1.4506;
+                tau_w1_minus = 60;
+                tau_w2_minus = 15;
+                k_w_minus = 65;
+                u_w_minus = 0.03;
+                tau_w_plus = 280;
+                tau_fi = 0.11;
+                tau_01 = 400;
+                tau_02 = 6;
+                tau_so_1 = 30.0181;
+                tau_so_2 = 0.9957;
+                k_so = 2.0458;
+                u_so = 0.65;
+                tau_s1 = 2.7342;
+                tau_s2 = 16;
+                k_s = 2.0994;
+                u_s = 0.9087;
+                tau_si = 1.8875;
+                tau_w_inf = 0.07;
+                w_inf_star = 0.94;
+                break;
+
+            case 2 : // ENDO
+                u_0 = 0;
+                u_u = 1.55;
+                theta_v = 0.3;
+                theta_w = 0.13;
+                theta_v_minus = 0.006;
+                theta_0 = 0.006;
+                tau_v1_minus = 60;
+                tau_v2_minus = 1150;
+                tau_v_plus = 1.4506;
+                tau_w1_minus = 60;
+                tau_w2_minus = 15;
+                k_w_minus = 65;
+                u_w_minus = 0.03;
+                tau_w_plus = 280;
+                tau_fi = 0.11;
+                tau_01 = 400;
+                tau_02 = 6;
+                tau_so_1 = 30.0181;
+                tau_so_2 = 0.9957;
+                k_so = 2.0458;
+                u_so = 0.65;
+                tau_s1 = 2.7342;
+                tau_s2 = 16;
+                k_s = 2.0994;
+                u_s = 0.9087;
+                tau_si = 1.8875;
+                tau_w_inf = 0.07;
+                w_inf_star = 0.94;
+                break;
+
+            default :
+                throw -1;
+                break;
+        }
+    }
+
     double getAdimensionalU(double v){
         return (1000.0 * v + 84.0) / 85.7;
     }
@@ -77,61 +178,34 @@ public:
     ~BuenoOrovioIonicModel() override {}
 
 protected:
-    const double u_0 = 0;
-
-    const double u_u = 1.55;
-
-    const double theta_v = 0.3;
-
-    const double theta_w = 0.13;
-
-    const double theta_v_minus = 0.006;
-
-    const double theta_0 = 0.006;
-
-    const double tau_v1_minus = 60;
-
-    const double tau_v2_minus = 1150;
-
-    const double tau_v_plus = 1.4506;
-
-    const double tau_w1_minus = 60;
-
-    const double tau_w2_minus = 15;
-
-    const double k_w_minus = 65;
-
-    const double u_w_minus = 0.03;
-
-    const double tau_w_plus = 280;
-
-    const double tau_fi = 0.11;
-
-    const double tau_01 = 400;
-
-    const double tau_02 = 6;
-
-    const double tau_so_1 = 30.0181;
-
-    const double tau_so_2 = 0.9957;
-
-    const double k_so = 2.0458;
-
-    const double u_so = 0.65;
-
-    const double tau_s1 = 2.7342;
-
-    const double tau_s2 = 16;
-
-    const double k_s = 2.0994;
-
-    const double u_s = 0.9087;
-
-    const double tau_si = 1.8875;
-
-    const double tau_w_inf = 0.07;
-
-    const double w_inf_star = 0.94;
+    double u_0;
+    double u_u;
+    double theta_v;
+    double theta_w;
+    double theta_v_minus;
+    double theta_0;
+    double tau_v1_minus;
+    double tau_v2_minus;
+    double tau_v_plus;
+    double tau_w1_minus;
+    double tau_w2_minus;
+    double k_w_minus;
+    double u_w_minus;
+    double tau_w_plus;
+    double tau_fi;
+    double tau_01;
+    double tau_02;
+    double tau_so_1;
+    double tau_so_2;
+    double k_so;
+    double u_so;
+    double tau_s1;
+    double tau_s2;
+    double k_s;
+    double u_s;
+    double tau_si;
+    double tau_w_inf;
+    double w_inf_star;
 
     double H(double x){
         if (x < 0){

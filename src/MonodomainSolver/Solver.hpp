@@ -22,12 +22,13 @@ public:
     // Constructor. We provide the final time, time step Delta t and theta method
     // parameter as constructor arguments.
     Solver(
-            const std::string &mesh_file_name_,
+            const std::string  &mesh_file_name_,
             const unsigned int &r_,
             const double       &T_,
             const double       &deltat_,
             const double       &fe_theta_,
             const double       &ode_theta_,
+            const int          mass_lumping_,
             std::shared_ptr<IonicModel<N_ion>> ionic_model_,
             std::shared_ptr<Coupler<N_ion>> coupler_,
             std::unique_ptr<TensorFunction<2, dim>> d_,
@@ -51,7 +52,7 @@ public:
     {
 
         init();
-        fe_solver = std::make_unique<FESolver>(r_, T_, deltat_, fe_theta_, mesh, fe, quadrature, dof_handler, std::move(d_), std::move(I_app_));
+        fe_solver = std::make_unique<FESolver>(r_, T_, deltat_, fe_theta_, mass_lumping_, mesh, fe, quadrature, dof_handler, std::move(d_), std::move(I_app_));
         fe_solver->setup();
         fe_solver->setInitialSolution(std::move(u_0));
         coupler->setInitialGatingVariables(*this, std::move(gate_vars_0));
@@ -174,10 +175,6 @@ private:
 
     // Final time.
     double T;
-
-    //std::deque<std::vector<double>> u;//defined over dof; remember push_front
-
-    //std::vector<GatingVariables<N_ion>> gate_vars;//defined according to coupling method
 
     // Discretization. ///////////////////////////////////////////////////////////
 

@@ -14,6 +14,7 @@ public:
             const double       &T_,
             const double       &deltat_,
             const double       &theta_,
+            const int          mass_lumping_,
             parallel::fullydistributed::Triangulation<dim>& mesh_,
             std::shared_ptr<FiniteElement<dim>> fe_,
             std::shared_ptr<Quadrature<dim>> quadrature_,
@@ -28,6 +29,7 @@ public:
             , r(r_)
             , deltat(deltat_)
             , theta(theta_)
+            , mass_lumping(mass_lumping_)
             , mesh(mesh_)
             , fe(fe_)
             , quadrature(quadrature_)
@@ -104,6 +106,9 @@ private:
 
     // Theta parameter of the theta method.
     const double theta;
+
+    // Mass Matrix Lumping flag
+    int mass_lumping;
 
     // Mesh.
     parallel::fullydistributed::Triangulation<dim>& mesh;

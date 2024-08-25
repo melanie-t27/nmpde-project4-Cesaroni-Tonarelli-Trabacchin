@@ -17,24 +17,36 @@ int main(int argc, char *argv[]){
     const unsigned int mpi_rank = Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
 
     const unsigned int degree = 1;
+    constexpr int n_ion = 3;
     // Default values
     double T     = 0.05;
     double theta_fe = 0.5;
     double theta_ode = 0.5;
     double deltat = 0.05/1000;
+    int tissue_type = 0;
+    int coupler_type = 0;
+    int mass_lumping = 0;
     std::string filename = "../meshes/cuboid_v2.msh";
 
     // Process command line arguments
     for (int i = 1; i < argc; ++i)
     {
-        /*if (std::string(argv[i]) == "-tt" && i + 1 < argc) // tissue type
+        if (std::string(argv[i]) == "-tt" && i + 1 < argc) // tissue type
         {
             tissue_type = std::stoi(argv[i + 1]);
             ++i;
         }
-        else */if (std::string(argv[i]) == "-fn" && i + 1 < argc) // mesh name
+        else if (std::string(argv[i]) == "-fn" && i + 1 < argc) // mesh name
         {
             filename = argv[i + 1];
+            ++i;
+        }
+        else if (std::string(argv[i]) == "-ct" && i + 1 < argc){ // coupler type
+            coupler_type = std::stoi(argv[i + 1]);
+            ++i;
+        }
+        else if (std::string(argv[i]) == "-ml" && i + 1 < argc){ //mass lumping
+            mass_lumping = std::stoi(argv[i + 1]);
             ++i;
         }
         else if (std::string(argv[i]) == "-T" && i + 1 < argc){ // Total time
@@ -52,7 +64,8 @@ int main(int argc, char *argv[]){
         else if (std::string(argv[i]) == "-tode" && i + 1 < argc){
             theta_ode = std::stod(argv[i + 1]);
             ++i;
-        } else {
+        } 
+        else {
             if(mpi_rank == 0){
                 std::cout << "Wrong parameters!" << std::endl;
                 return 1;
@@ -62,12 +75,30 @@ int main(int argc, char *argv[]){
 
 
     std::unique_ptr<U_0<dim>> u_0 = std::make_unique<U_0<dim>>();
-    std::array<std::unique_ptr<Function<dim>>, 3> gating_variables_0{{std::make_unique<GatingVariable_V0<dim>>(), std::make_unique<GatingVariable_W0<dim>>(), std::make_unique<GatingVariable_S0<dim>>() }};
-    std::shared_ptr<BuenoOrovioIonicModel<3>> ionic_model = std::make_shared<BuenoOrovioIonicModel<3>>();
-    std::shared_ptr<QCoupler<3>> coupler = std::make_shared<QCoupler<3>>();
+    std::array<std::unique_ptr<Function<dim>>, n_ion> gating_variables_0{{std::make_unique<GatingVariable_V0<dim>>(), std::make_unique<GatingVariable_W0<dim>>(), std::make_unique<GatingVariable_S0<dim>>() }};
+    std::shared_ptr<BuenoOrovioIonicModel<n_ion>> ionic_model = std::make_shared<BuenoOrovioIonicModel<n_ion>>(tissue_type);
+    std::shared_ptr<Coupler<n_ion>> coupler;
+    switch (coupler_type)
+    {
+    case 0:
+        coupler = std::make_shared<ICICoupler<n_ion>>();
+        break;
+
+    case 1:
+        coupler = std::make_shared<QCoupler<n_ion>>();
+        break;
+    
+    case 2:
+        coupler = std::make_shared<QCoupler<n_ion>>();
+        break;
+    
+    default:
+        throw -1;
+        break;
+    }
     std::unique_ptr<Iapp<dim>> I_app = std::make_unique<Iapp<dim>>();
     std::unique_ptr<D<dim>> d = std::make_unique<D<dim>>();
-    Solver<3> solver(filename, degree, T, deltat, theta_fe, theta_ode, ionic_model, coupler, std::move(d), std::move(I_app), std::move(u_0), gating_variables_0);
+    Solver<n_ion> solver(filename, degree, T, deltat, theta_fe, theta_ode, mass_lumping, ionic_model, coupler, std::move(d), std::move(I_app), std::move(u_0), gating_variables_0);
     solver.solve();
     return 0;
 }
