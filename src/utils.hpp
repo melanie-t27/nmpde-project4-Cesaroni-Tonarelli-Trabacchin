@@ -83,7 +83,7 @@ public:
     virtual double
     value(const Point<dim> & /*p*/, const unsigned int /*component*/ = 0) const override
     {
-        return -0.08523; /*mV*/
+        return -0.08523; /*V*/
     }
 };
 
@@ -115,20 +115,6 @@ public:
     {
         return 0.0;
     }
-};
-
-struct PerTaskData {
-    FullMatrix<double> cell_matrix;
-    std::vector<unsigned int> dof_indices;
-
-    PerTaskData(const FiniteElement<3>& fe) : cell_matrix(fe.dofs_per_cell, fe.dofs_per_cell), dof_indices(fe.dofs_per_cell) {}
-
-};
-
-struct ScratchData {
-    FEValues<3> fe_values;
-    ScratchData(const FiniteElement<3>& fe, const Quadrature<3>& quadrature, const UpdateFlags update_flags) : fe_values(fe, quadrature, update_flags) {}
-    ScratchData(const ScratchData& scratch): fe_values(scratch.fe_values.get_fe(), scratch.fe_values.get_quadrature(), scratch.fe_values.get_update_flags()) {}
 };
 
 
