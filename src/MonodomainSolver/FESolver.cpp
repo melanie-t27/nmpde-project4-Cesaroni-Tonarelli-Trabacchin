@@ -21,7 +21,6 @@ void FESolver::setup()
     stiffness_matrix.reinit(sparsity);
     lhs_matrix.reinit(sparsity);
     rhs_matrix.reinit(sparsity);
-    Z_matrix.reinit(sparsity);
 
     pcout << "  Initializing the system right-hand side" << std::endl;
     system_rhs.reinit(locally_owned_dofs, MPI_COMM_WORLD);
