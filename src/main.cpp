@@ -5,7 +5,7 @@
 #include "IonicModels/BuenoOrovioModel/BOModel.hpp"
 #include "Couplers/SVICoupler.hpp"
 #include "Couplers/ICICoupler.hpp"
-#include "Couplers/QCoupler.hpp"
+#include "Couplers/GICoupler.hpp"
 #include <array>
 #include <memory>
 
@@ -85,11 +85,11 @@ int main(int argc, char *argv[]){
         break;
 
     case 1:
-        coupler = std::make_shared<QCoupler<n_ion>>();
+        coupler = std::make_shared<GICoupler<n_ion>>();
         break;
     
     case 2:
-        coupler = std::make_shared<QCoupler<n_ion>>();
+        coupler = std::make_shared<SVICoupler<n_ion>>();
         break;
     
     default:
