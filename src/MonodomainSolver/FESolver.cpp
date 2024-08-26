@@ -69,7 +69,7 @@ void FESolver::assemble_matrices() {
             {
                 for (unsigned int j = 0; j < dofs_per_cell; ++j)
                 {
-                    cell_mass_matrix(i, i) += chi * C_m * fe_values.shape_value(i, q) *
+                    cell_mass_matrix(i, mass_lumping == 0 ? j : i) += chi * C_m * fe_values.shape_value(i, q) *
                                               fe_values.shape_value(j, q) /
                                               deltat * fe_values.JxW(q);
 
