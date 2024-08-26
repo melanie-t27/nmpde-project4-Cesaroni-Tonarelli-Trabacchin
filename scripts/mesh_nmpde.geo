@@ -2,7 +2,10 @@
 Lx = 0.020; // Length of the cuboid in the x direction
 Ly = 0.007;  // Length of the cuboid in the y direction
 Lz = 0.003;  // Length of the cuboid in the z direction
-lc = 0.000094; // Discretization step
+//lc = 0.000094; // Discretization step
+
+strLC = Sprintf("%g", lc);
+
 
 // Create the vertices of the cuboid
 Point(1) = {0, 0, 0, lc};
@@ -48,19 +51,19 @@ Surface Loop(1) = {1, 2, 3, 4, 5, 6};
 Volume(1) = {1};
 
 // Define physical groups for boundaries (surfaces)
-Physical Surface(0) = {1};
-Physical Surface(1) = {3};
-Physical Surface(2) = {5};
-Physical Surface(3) = {2};
-Physical Surface(4) = {4};
-Physical Surface(5) = {6};
+//Physical Surface(0) = {1};
+//Physical Surface(1) = {3};
+//Physical Surface(2) = {5};
+//Physical Surface(3) = {2};
+//Physical Surface(4) = {4};
+//Physical Surface(5) = {6};
 
 // Define physical group for the volume
-Physical Volume(10) = {1};
+//Physical Volume(10) = {1};
 
 // Mesh the volume
 Mesh 3;
 
 // Save the mesh to a file
-Mesh.Format = 1; // Set the file format (1 = MSH format)
-Save "cuboid_v2.msh";
+//Mesh.Format = 1; // Set the file format (1 = MSH format)
+Save StrCat("../meshes/cuboid-step-", strLC, ".msh");
