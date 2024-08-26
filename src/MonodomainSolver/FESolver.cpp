@@ -69,7 +69,7 @@ void FESolver::assemble_matrices() {
             {
                 for (unsigned int j = 0; j < dofs_per_cell; ++j)
                 {
-                    cell_mass_matrix(i, mass_lumping == 0 ? j : i) += chi * C_m * fe_values.shape_value(i, q) *
+                    cell_mass_matrix(i, i) += chi * C_m * fe_values.shape_value(i, q) *
                                               fe_values.shape_value(j, q) /
                                               deltat * fe_values.JxW(q);
 
@@ -180,6 +180,6 @@ FESolver::output(unsigned int time_step)
     const Vector<double> partitioning(partition_int.begin(), partition_int.end());
     data_out.add_data_vector(partitioning, "partitioning");
     data_out.build_patches();
-    data_out.write_vtu_with_pvtu_record("./", "output", time_step, MPI_COMM_WORLD, 3);
+    data_out.write_vtu_with_pvtu_record(output_folder, "output", time_step, MPI_COMM_WORLD, 3);
 }
 

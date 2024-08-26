@@ -15,6 +15,7 @@ public:
             const double       &deltat_,
             const double       &theta_,
             const int          mass_lumping_,
+            std::string output_folder_,
             parallel::fullydistributed::Triangulation<dim>& mesh_,
             std::shared_ptr<FiniteElement<dim>> fe_,
             std::shared_ptr<Quadrature<dim>> quadrature_,
@@ -30,6 +31,7 @@ public:
             , deltat(deltat_)
             , theta(theta_)
             , mass_lumping(mass_lumping_)
+            , output_folder(output_folder_)
             , mesh(mesh_)
             , fe(fe_)
             , quadrature(quadrature_)
@@ -109,6 +111,9 @@ private:
 
     // Mass Matrix Lumping flag
     int mass_lumping;
+
+    //output folder
+    std::string output_folder;
 
     // Mesh.
     parallel::fullydistributed::Triangulation<dim>& mesh;

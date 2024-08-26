@@ -27,6 +27,7 @@ int main(int argc, char *argv[]){
     int coupler_type = 0;
     int mass_lumping = 0;
     std::string filename = "../meshes/cuboid_v2.msh";
+    std::string output_folder = "./";
 
     // Process command line arguments
     for (int i = 1; i < argc; ++i)
@@ -65,6 +66,10 @@ int main(int argc, char *argv[]){
             theta_ode = std::stod(argv[i + 1]);
             ++i;
         } 
+        else if(std::string(argv[i]) == "-o" && i + 1 < argc) {
+            output_folder = argv[i + 1];
+            ++i;
+        }
         else {
             if(mpi_rank == 0){
                 std::cout << "Wrong parameters!" << std::endl;
@@ -98,7 +103,7 @@ int main(int argc, char *argv[]){
     }
     std::unique_ptr<Iapp<dim>> I_app = std::make_unique<Iapp<dim>>();
     std::unique_ptr<D<dim>> d = std::make_unique<D<dim>>();
-    Solver<n_ion> solver(filename, degree, T, deltat, theta_fe, theta_ode, mass_lumping, ionic_model, coupler, std::move(d), std::move(I_app), std::move(u_0), gating_variables_0);
+    Solver<n_ion> solver(filename, degree, T, deltat, theta_fe, theta_ode, mass_lumping, output_folder, ionic_model, coupler, std::move(d), std::move(I_app), std::move(u_0), gating_variables_0);
     solver.solve();
     return 0;
 }

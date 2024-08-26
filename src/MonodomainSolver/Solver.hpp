@@ -29,6 +29,7 @@ public:
             const double       &fe_theta_,
             const double       &ode_theta_,
             const int          mass_lumping_,
+            std::string output_folder_,
             std::shared_ptr<IonicModel<N_ion>> ionic_model_,
             std::shared_ptr<Coupler<N_ion>> coupler_,
             std::unique_ptr<TensorFunction<2, dim>> d_,
@@ -45,6 +46,7 @@ public:
     , deltat(deltat_)
     , fe_theta(fe_theta_)
     , ode_theta(ode_theta_)
+    , output_folder(output_folder_)
     , mesh(MPI_COMM_WORLD)
     , ionic_model(ionic_model_)
     , coupler(coupler_)
@@ -52,7 +54,7 @@ public:
     {
 
         init();
-        fe_solver = std::make_unique<FESolver>(r_, T_, deltat_, fe_theta_, mass_lumping_, mesh, fe, quadrature, dof_handler, std::move(d_), std::move(I_app_));
+        fe_solver = std::make_unique<FESolver>(r_, T_, deltat_, fe_theta_, mass_lumping_, output_folder_, mesh, fe, quadrature, dof_handler, std::move(d_), std::move(I_app_));
         fe_solver->setup();
         fe_solver->setInitialSolution(std::move(u_0));
         coupler->setInitialGatingVariables(*this, std::move(gate_vars_0));
@@ -193,6 +195,9 @@ private:
     // Theta parameter of the theta method used by the ODESolver.
     double ode_theta;
 
+    //output folder
+    std::string output_folder;
+
     // Mesh.
     parallel::fullydistributed::Triangulation<dim> mesh;
 
@@ -297,7 +302,7 @@ private:
       const Vector<double> partitioning(partition_int.begin(), partition_int.end());
       data_out.add_data_vector(partitioning, "partitioning");
       data_out.build_patches();
-      data_out.write_vtu_with_pvtu_record("./", "output_activation_times", 0, MPI_COMM_WORLD, 3);
+      data_out.write_vtu_with_pvtu_record(output_folder, "output_activation_times", 0, MPI_COMM_WORLD, 3);
     }
 
     TrilinosWrappers::MPI::Vector activation_times;
