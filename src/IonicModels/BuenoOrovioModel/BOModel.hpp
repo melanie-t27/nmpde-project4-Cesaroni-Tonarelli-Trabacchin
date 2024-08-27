@@ -104,6 +104,36 @@ public:
                 w_inf_star = 0.94;
                 break;
 
+            case 3: //ten tuscer
+                u_0 = 0;
+                u_u = 1.58;
+                theta_v = 0.3;
+                theta_w = 0.015;
+                theta_v_minus = 0.015;
+                theta_0 = 0.006;
+                tau_v1_minus = 60;
+                tau_v2_minus = 1150;
+                tau_v_plus = 1.4506;
+                tau_w1_minus = 70;
+                tau_w2_minus = 20;
+                k_w_minus = 65;
+                u_w_minus = 0.03;
+                tau_w_plus = 280;
+                tau_fi = 0.11;
+                tau_01 = 6;
+                tau_02 = 6;
+                tau_so_1 = 43;
+                tau_so_2 = 0.2;
+                k_so = 2;
+                u_so = 0.65;
+                tau_s1 = 2.7342;
+                tau_s2 = 3;
+                k_s = 2.0994;
+                u_s = 0.9087;
+                tau_si = 2.8723;
+                tau_w_inf = 0.07;
+                w_inf_star = 0.94;
+                break;
             default :
                 throw -1;
                 break;
