@@ -8,7 +8,9 @@
 template<int N_ion>
 class BuenoOrovioIonicModel : public IonicModel<N_ion> {
 public:
-
+   // The tissue_type parameter, representing the type of cardiac tissue (epicardium, myocardium, endocardium),
+   // is provided to the constructor.
+   //
     BuenoOrovioIonicModel(const int tissue_type){
         switch(tissue_type){
             case 0 : // EPI
@@ -104,7 +106,7 @@ public:
                 w_inf_star = 0.94;
                 break;
 
-            case 3: //ten tuscer
+            case 3: //ten tusscher
                 u_0 = 0;
                 u_u = 1.58;
                 theta_v = 0.3;
@@ -140,18 +142,23 @@ public:
         }
     }
 
+    // V = 85.7u − 84
     double getAdimensionalU(double v){
         return (1000.0 * v + 84.0) / 85.7;
     }
 
+
     double getDerivative(int index, double u, GatingVariables<N_ion> vars) override
     {
         u = getAdimensionalU(u);
+        //  dv/dt
         if (index == 0) {
             return ((1 - H(u - theta_v)) * (v_inf(u) - vars.get(0))) / (tau_v_minus(u)) - ((H(u - theta_v)) * vars.get(0)) / (tau_v_plus);
         } else if (index == 1) {
+            // dw/dt
             return ((1 - H(u - theta_w)) * (w_inf(u) - vars.get(1))) / (tau_w_minus(u)) - (H(u - theta_w) * vars.get(1)) / (tau_w_plus);
         } else if (index == 2) {
+            // ds/dt
             return 1 / tau_s(u) * ((1 + std::tanh(k_s * (u - u_s))) / 2 - vars.get(2));
         } else {
             assert(false);
@@ -182,23 +189,28 @@ public:
         }
     }
 
+
+    // J_ion = J_fi+J_si+J_so
     double ionic_current(const double u, GatingVariables<N_ion>& vars) override 
     {
         return this->get_FI(u, vars) + this->get_SI(u, vars) + this->get_SO(u, vars);
     }
 
+    // J_fi
     double get_FI(double u, GatingVariables<N_ion>& vars) override
     {
         u = getAdimensionalU(u);
         return - vars.get(0) * H(u - theta_v) * (u - theta_v) * (u_u - u)/tau_fi;
     }
 
+    // J_so
     double get_SO(double u, GatingVariables<N_ion>& /*vars*/) override
     {
         u = getAdimensionalU(u);
         return u*(1 - H(u - theta_w))/tau_o(u) + H(u - theta_w)/tau_so(u);
     }
 
+    // J_si
     double get_SI(double u, GatingVariables<N_ion>& vars) override
     {
         u = getAdimensionalU(u);
@@ -208,6 +220,7 @@ public:
     ~BuenoOrovioIonicModel() override {}
 
 protected:
+    // ionic model parameters
     double u_0;
     double u_u;
     double theta_v;
@@ -237,6 +250,7 @@ protected:
     double tau_w_inf;
     double w_inf_star;
 
+    // Heaviside function
     double H(double x){
         if (x < 0){
             return 0;

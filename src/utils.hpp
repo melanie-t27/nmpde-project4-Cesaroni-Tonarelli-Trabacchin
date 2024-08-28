@@ -31,6 +31,7 @@
 
 using namespace dealii;
 
+// N is the number of gating variables, 3 in our case
 template<int N>
 struct GatingVariables {
     double& get(int k) {
@@ -41,6 +42,7 @@ private:
     double var[N];
 };
 
+// tissue conductivity tensor
 template <int dim>
 class D : public TensorFunction<2, dim>
 {
@@ -64,6 +66,10 @@ private:
     double sigma_et = 0.24;
 };
 
+
+// applied external stimulus current.
+// stimulation geometry: 1.5 x 1.5 x 1.5mm cube from a corner
+// stimulation protocol: 2ms at 50 000 nAmm−3
 template <int dim>
 class Iapp : public Function<dim>
 {
@@ -78,6 +84,7 @@ public:
     }
 };
 
+// initial condition
 template <int dim>
 class U_0 : public Function<dim> {
 public:
@@ -88,6 +95,7 @@ public:
     }
 };
 
+// initial v
 template <int dim>
 class GatingVariable_V0 : public Function<dim> {
 public:
@@ -98,6 +106,7 @@ public:
     }
 };
 
+// initial w
 template <int dim>
 class GatingVariable_W0 : public Function<dim> {
 public:
@@ -108,6 +117,7 @@ public:
     }
 };
 
+// initial s
 template <int dim>
 class GatingVariable_S0 : public Function<dim> {
 public:
