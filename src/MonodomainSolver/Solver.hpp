@@ -62,6 +62,7 @@ public:
         std::cout << "checking activation times" << std::endl;
         activation_times_init();
         #endif
+        
     }
 
     std::shared_ptr<FiniteElement<dim>> getFiniteElement() {

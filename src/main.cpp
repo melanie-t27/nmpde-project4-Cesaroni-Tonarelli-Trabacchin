@@ -94,7 +94,7 @@ int main(int argc, char *argv[]){
         break;
     
     case 2:
-        coupler = std::make_shared<SVICou0pler<n_ion>>();
+        coupler = std::make_shared<SVICoupler<n_ion>>();
         break;
     
     default:
