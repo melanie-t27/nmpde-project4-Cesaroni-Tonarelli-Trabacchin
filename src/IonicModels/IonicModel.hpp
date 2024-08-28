@@ -2,6 +2,7 @@
 #define IONIC_MODEL_H
 #include <array>
 #include "../utils.hpp"
+#include "../profile.hpp"
 
 template<int N_ion>
 class IonicModel {

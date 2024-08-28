@@ -11,6 +11,5 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wpedantic")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 add_definitions (-D CHECK_ACTIVATION_TIMES)
 
-add_executable(nmpde src/main.cpp
-        src/MonodomainSolver/FESolver.cpp )
+add_executable(nmpde src/main.cpp)
 deal_ii_setup_target(nmpde)

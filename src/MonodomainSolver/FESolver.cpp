@@ -1,9 +1,11 @@
 #include "FESolver.hpp"
 #include "../utils.hpp"
+//#include "../profile.hpp"
 #include "Solver.hpp"
 #include <chrono>
 
 using namespace dealii;
+
 
 void FESolver::setup()
 {
@@ -157,15 +159,28 @@ TrilinosWrappers::MPI::Vector&
 FESolver::solve_time_step(double time)
 {
     I_app->set_time(time);
+    auto start1 = std::chrono::high_resolution_clock::now();
     assemble_rhs(time);
+    auto stop1 = std::chrono::high_resolution_clock::now();
+    profileData.assemble_rhs += std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count();
     SolverControl solver_control(1000, 1e-6 * system_rhs.l2_norm());
 
     SolverCG<TrilinosWrappers::MPI::Vector> solver_ls(solver_control);
     TrilinosWrappers::PreconditionILU      preconditioner;
+    
+    start1 = std::chrono::high_resolution_clock::now();
     preconditioner.initialize(lhs_matrix, TrilinosWrappers::PreconditionILU::AdditionalData(0,0.0,1.01,0));
+    stop1 = std::chrono::high_resolution_clock::now();
+    profileData.fe_precond_init += std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count();
+    start1 = std::chrono::high_resolution_clock::now();
     solver_ls.solve(lhs_matrix, solution_owned, system_rhs, preconditioner);
-
+    profileData.avg_lin_iters += solver_control.last_step();
+    stop1 = std::chrono::high_resolution_clock::now();
+    profileData.fe_linear_solve_time += std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count();
+    start1 = std::chrono::high_resolution_clock::now();
     solution = solution_owned;
+    stop1 = std::chrono::high_resolution_clock::now();
+    profileData.comm_time += std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count();
     return solution_owned;
 }
 

@@ -4,9 +4,11 @@
 #include <vector>
 #include "Coupler.hpp"
 #include "../utils.hpp"
+#include "../profile.hpp"
 #include "../VectorView.hpp"
 #include <cstring>
 #include <chrono>
+
 
 using namespace dealii;
 
@@ -18,6 +20,7 @@ class GICoupler : public Coupler<N_ion> {
 public:
 
     void solveOde(Solver<N_ion>& solver) override {
+        auto start1 = std::chrono::high_resolution_clock::now();
         std::shared_ptr<FiniteElement<dim>> fe = solver.getFiniteElement();
         std::shared_ptr<Quadrature<dim>> quadrature = solver.getQuadrature();
         FEValues<dim>  fe_values(*fe,*quadrature,update_values | update_gradients | update_quadrature_points | update_JxW_values);
@@ -45,17 +48,24 @@ public:
                 interpolated_u[cell->active_cell_index() * n_q + q] = interpolated_value;
             }
         }
+        
 
         std::vector<VectorView<std::vector<double>>> gate_vars_views;
         for(int i = 0; i < N_ion; i++) {
             gate_vars_views.emplace_back(gate_vars[i], 0, gate_vars.size());
         }
         VectorView<std::vector<double>> sol_view(interpolated_u, 0, interpolated_u.size());
+        auto stop1 = std::chrono::high_resolution_clock::now();
+        profileData.interpolation += std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count();
+        start1 = std::chrono::high_resolution_clock::now();
         solver.getOdeSolver().solve(sol_view, gate_vars_views);
+        stop1 = std::chrono::high_resolution_clock::now();
+        profileData.ode_solve += std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count();
     }
 
 
     void solveFE(Solver<N_ion>& solver, double time) override {
+        auto start1 = std::chrono::high_resolution_clock::now();
         std::shared_ptr<Quadrature<dim>> quadrature = solver.getQuadrature();
         DoFHandler<dim>& dofHandler = solver.getDofHandler();
         std::shared_ptr<IonicModel<N_ion>> ionicModel = solver.getIonicModel();
@@ -72,7 +82,12 @@ public:
                 solver.getIonicCurrent(cell->active_cell_index(), q) = ionicModel->ionic_current(interpolated_u[cell->active_cell_index() * n_q + q], vars);
             }
         }
+        auto stop1 = std::chrono::high_resolution_clock::now();
+        profileData.interpolation += std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count();
+        start1 = std::chrono::high_resolution_clock::now();
         solver.getFESolver()->solve_time_step(time);
+        stop1 = std::chrono::high_resolution_clock::now();
+        profileData.fe_solve_tot += std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count();
     }
 
 

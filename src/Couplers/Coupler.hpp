@@ -29,6 +29,7 @@
 #include "../MonodomainSolver/Solver.hpp"
 #include "../utils.hpp"
 #include "../MonodomainSolver/ODESolver.hpp"
+#include "../profile.hpp"
 
 using namespace dealii;
 template<int N_ion>

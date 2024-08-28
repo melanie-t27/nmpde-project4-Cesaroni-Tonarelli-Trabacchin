@@ -6,11 +6,16 @@
 #include "../utils.hpp"
 #include "ODESolver.hpp"
 #include "FESolver.hpp"
+#include "FESolver.cpp"
 #include <deque>
 #include <fstream>
 #include <iostream>
+#include "../profile.hpp"
+#include <fstream>
+
 
 using namespace dealii;
+
 
 // Class representing monodomain problem.
 template<int N_ion>
@@ -53,16 +58,34 @@ public:
     , ode_solver(ode_theta_, deltat_, ionic_model_)
     {
 
+
+        profileData.mesh_init = 0;
+        profileData.fe_setup = 0;
+        profileData.ode_solve = 0;
+        profileData.interpolation  = 0;
+        profileData.assemble_rhs = 0;
+        profileData.fe_solve_tot = 0;
+        profileData.fe_precond_init = 0;
+        profileData.fe_linear_solve_time = 0;
+        profileData.avg_lin_iters = 0;
+        profileData.comm_time = 0;
+        profileData.N_iters = 0;
+        auto start1 = std::chrono::high_resolution_clock::now();
         init();
+        auto stop1 = std::chrono::high_resolution_clock::now();
+        profileData.mesh_init = std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count();
         fe_solver = std::make_unique<FESolver>(r_, T_, deltat_, fe_theta_, mass_lumping_, output_folder_, mesh, fe, quadrature, dof_handler, std::move(d_), std::move(I_app_));
+        start1 = std::chrono::high_resolution_clock::now();
         fe_solver->setup();
+        stop1 = std::chrono::high_resolution_clock::now();;
+        profileData.fe_setup = std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count();
         fe_solver->setInitialSolution(std::move(u_0));
         coupler->setInitialGatingVariables(*this, std::move(gate_vars_0));
         #ifdef CHECK_ACTIVATION_TIMES
         std::cout << "checking activation times" << std::endl;
         activation_times_init();
         #endif
-        
+
     }
 
     std::shared_ptr<FiniteElement<dim>> getFiniteElement() {
@@ -127,6 +150,7 @@ public:
     }
 
     void solve() {
+        profileData.ode_solve = 0;
         time = 0.0;
         unsigned int time_step = 0;
         #ifndef CHECK_ACTIVATION_TIMES
@@ -138,18 +162,42 @@ public:
             pcout << "solving time step " << time_step << std::endl;
             coupler->solveOde(*this);
             coupler->solveFE(*this, time);
-    
             #ifndef CHECK_ACTIVATION_TIMES
             fe_solver->output(time_step);
             #endif
-            if(time_step % 100 == 0) {
+            /*if(time_step % 100 == 0) {
                 fe_solver -> output(time_step);
-            }
+            }*/
 
             #ifdef CHECK_ACTIVATION_TIMES
             compute_activation_times(time);
             #endif
+            profileData.N_iters++;
         }
+
+        profileData.ode_solve /= time_step;
+        profileData.interpolation /= time_step;
+        profileData.assemble_rhs /= time_step;
+        profileData.fe_solve_tot /= time_step;
+        profileData.fe_precond_init /= time_step;
+        profileData.fe_linear_solve_time /= time_step;
+        profileData.avg_lin_iters /= time_step;
+        profileData.comm_time /= time_step;
+
+        std::ofstream profile_output(output_folder+"profile_log"+std::to_string(mpi_rank)+".log");
+        profile_output << "mesh_init " << profileData.mesh_init << std::endl
+                        << "fe setup " << profileData.fe_setup << std::endl
+                        << "ode_Solve " << profileData.ode_solve << std::endl
+                        << "interpolation " << profileData.interpolation << std::endl
+                        << "assemble rhs " << profileData.assemble_rhs << std::endl
+                        << "fe solve tot " << profileData.fe_solve_tot << std::endl
+                        << "fe linear solve time " << profileData.fe_linear_solve_time << std::endl
+                        << "avg lin iters " << profileData.avg_lin_iters << std::endl
+                        << "comm time " << profileData.comm_time << std::endl;
+
+        profile_output.close();
+
+
         
         #ifdef CHECK_ACTIVATION_TIMES
         output_activation_times();

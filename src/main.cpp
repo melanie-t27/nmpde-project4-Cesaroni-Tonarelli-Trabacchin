@@ -101,6 +101,18 @@ int main(int argc, char *argv[]){
         throw -1;
         break;
     }
+    std::ofstream profile_output(output_folder+"profile_log"+std::to_string(mpi_rank)+".log");
+    profile_output << "filename " << filename << std::endl
+                    << "T " << T << std::endl
+                    << "deltat " << deltat << std::endl
+                    << "theta_fe "<< theta_fe << std::endl
+                    << "theta_ode "<<theta_ode << std::endl
+                    << "mass lumping " << mass_lumping << std::endl
+                    << "output_folder " << output_folder << std::endl
+                    << "ionic_model " << tissue_type << std::endl
+                    << "coupler " << coupler_type << std::endl;
+    profile_output.close();
+
     std::unique_ptr<Iapp<dim>> I_app = std::make_unique<Iapp<dim>>();
     std::unique_ptr<D<dim>> d = std::make_unique<D<dim>>();
     Solver<n_ion> solver(filename, degree, T, deltat, theta_fe, theta_ode, mass_lumping, output_folder, ionic_model, coupler, std::move(d), std::move(I_app), std::move(u_0), gating_variables_0);

@@ -4,6 +4,7 @@
 #include <vector>
 #include "Coupler.hpp"
 #include "../utils.hpp"
+#include "../profile.hpp"
 #include "../VectorView.hpp"
 #include <cstring>
 #include <chrono>
@@ -17,6 +18,7 @@ class SVICoupler : public Coupler<N_ion> {
 public:
 
     void solveOde(Solver<N_ion>& solver) override {
+        auto start1 = std::chrono::high_resolution_clock::now();
         std::vector<VectorView<TrilinosWrappers::MPI::Vector>> gate_vars_views;
         for(int i = 0; i < N_ion; i++) {
             auto [first, last] = gate_vars_owned[i].local_range();
@@ -25,12 +27,18 @@ public:
         auto [first, last] = solver.getFESolutionOwned().local_range();
         VectorView<TrilinosWrappers::MPI::Vector> sol_view(solver.getFESolutionOwned(), first, last - first);
         solver.getOdeSolver().solve(sol_view, gate_vars_views);
+        auto stop1 = std::chrono::high_resolution_clock::now();
+        profileData.ode_solve += profileData.ode_solve += std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count();
+        start1 = std::chrono::high_resolution_clock::now();
         for(int i = 0; i < N_ion; i++) {
             gate_vars[i] = gate_vars_owned[i];
         }
+        stop1 = std::chrono::high_resolution_clock::now();
+        profileData.comm_time += profileData.ode_solve += std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count();
     }
 
     void solveFE(Solver<N_ion>& solver, double time) override {
+        auto start1 = std::chrono::high_resolution_clock::now();
         std::shared_ptr<FiniteElement<dim>> fe = solver.getFiniteElement();
         std::shared_ptr<Quadrature<dim>> quadrature = solver.getQuadrature();
         FEValues<dim>  fe_values(*fe,*quadrature,update_values | update_gradients | update_quadrature_points | update_JxW_values);
@@ -66,7 +74,12 @@ public:
                 solver.getIonicCurrent(cell->active_cell_index(), q) = ionicModel->ionic_current(interpolated_values[N_ion],  vars);
             }
         }
+        auto stop1 = std::chrono::high_resolution_clock::now();
+        profileData.interpolation += profileData.ode_solve += std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count();
+        start1 = std::chrono::high_resolution_clock::now();
         solver.getFESolver()->solve_time_step(time);
+        stop1 = std::chrono::high_resolution_clock::now();
+        profileData.fe_solve_tot += profileData.ode_solve += std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count();
     }
 
     void setInitialGatingVariables(Solver<N_ion>& solver, std::array<std::unique_ptr<Function<dim>>, N_ion>  gate_vars_0) {
