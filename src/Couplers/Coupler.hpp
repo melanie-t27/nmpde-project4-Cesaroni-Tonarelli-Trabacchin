@@ -28,7 +28,7 @@
 #include <array>
 #include "../MonodomainSolver/Solver.hpp"
 #include "../utils.hpp"
-#include "../MonodomainSolver/ODESolver.hpp"
+#include "../IonicModels/ODESolver.hpp"
 
 using namespace dealii;
 template<int N_ion>

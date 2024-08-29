@@ -14,3 +14,19 @@ add_definitions (-D CHECK_ACTIVATION_TIMES)
 add_executable(nmpde src/main.cpp
         src/MonodomainSolver/FESolver.cpp )
 deal_ii_setup_target(nmpde)
+
+
+# Define the custom command with shell evaluation
+add_custom_command(
+  OUTPUT ${CMAKE_BINARY_DIR}/mesh_generated
+  COMMAND ${CMAKE_COMMAND} -E env sh -c "mkdir -p ../meshes && gmsh mesh_nmpde.geo -parse_and_exit -setnumber lc \$MESH_STEP"
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/scripts
+  COMMENT "Generating the mesh with gmsh"
+  VERBATIM
+)
+
+# Define the custom target
+add_custom_target(
+  GenerateMesh
+  DEPENDS ${CMAKE_BINARY_DIR}/mesh_generated
+)

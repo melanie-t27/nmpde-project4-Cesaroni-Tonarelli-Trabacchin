@@ -14,7 +14,6 @@ public:
             const double       &T_,
             const double       &deltat_,
             const double       &theta_,
-            const int          mass_lumping_,
             std::string output_folder_,
             parallel::fullydistributed::Triangulation<dim>& mesh_,
             std::shared_ptr<FiniteElement<dim>> fe_,
@@ -30,7 +29,6 @@ public:
             , r(r_)
             , deltat(deltat_)
             , theta(theta_)
-            , mass_lumping(mass_lumping_)
             , output_folder(output_folder_)
             , mesh(mesh_)
             , fe(fe_)
@@ -108,9 +106,6 @@ private:
 
     // Theta parameter of the theta method.
     const double theta;
-
-    // Mass Matrix Lumping flag
-    int mass_lumping;
 
     //output folder
     std::string output_folder;
