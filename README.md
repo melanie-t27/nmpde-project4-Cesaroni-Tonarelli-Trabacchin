@@ -1,9 +1,9 @@
 # Cardiac Electrophysiology
 This repository contains the code of the project for the Numerical Methods for Partial Differential Equations course @Polimi (pfof. Alfio Maria Quarterooni, TA Michele Bucelli).
 **Students**:
-- [Sabrina Cesaroni]
-- [Melanie Tonarelli]
-- [Tommaso Trabacchin]
+- [Sabrina Cesaroni](https://github.com/SabrinaCesaroni)
+- [Melanie Tonarelli](https://github.com/melanie-t27)
+- [Tommaso Trabacchin](https://github.com/tommasotrabacchinpolimi) 
 
 ## Introduction
 This project solves the Monodomain equation coupled with the Bueono-Orovio ionic model, employing the Finite Elements Method.
