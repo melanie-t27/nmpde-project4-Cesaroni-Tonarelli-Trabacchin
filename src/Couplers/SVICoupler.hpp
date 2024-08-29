@@ -28,13 +28,13 @@ public:
         VectorView<TrilinosWrappers::MPI::Vector> sol_view(solver.getFESolutionOwned(), first, last - first);
         solver.getOdeSolver().solve(sol_view, gate_vars_views);
         auto stop1 = std::chrono::high_resolution_clock::now();
-        profileData.ode_solve += profileData.ode_solve += std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count();
+        profileData.ode_solve += std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count();
         start1 = std::chrono::high_resolution_clock::now();
         for(int i = 0; i < N_ion; i++) {
             gate_vars[i] = gate_vars_owned[i];
         }
         stop1 = std::chrono::high_resolution_clock::now();
-        profileData.comm_time += profileData.ode_solve += std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count();
+        profileData.comm_time += std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count();
     }
 
     void solveFE(Solver<N_ion>& solver, double time) override {
@@ -75,11 +75,11 @@ public:
             }
         }
         auto stop1 = std::chrono::high_resolution_clock::now();
-        profileData.interpolation += profileData.ode_solve += std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count();
+        profileData.interpolation += std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count();
         start1 = std::chrono::high_resolution_clock::now();
         solver.getFESolver()->solve_time_step(time);
         stop1 = std::chrono::high_resolution_clock::now();
-        profileData.fe_solve_tot += profileData.ode_solve += std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count();
+        profileData.fe_solve_tot += std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count();
     }
 
     void setInitialGatingVariables(Solver<N_ion>& solver, std::array<std::unique_ptr<Function<dim>>, N_ion>  gate_vars_0) {

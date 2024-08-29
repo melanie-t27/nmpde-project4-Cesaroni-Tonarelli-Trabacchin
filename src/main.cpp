@@ -101,8 +101,9 @@ int main(int argc, char *argv[]){
         throw -1;
         break;
     }
-    std::ofstream profile_output(output_folder+"profile_log"+std::to_string(mpi_rank)+".log");
-    profile_output << "filename " << filename << std::endl
+    if(mpi_rank==0) {
+        std::ofstream profile_output(output_folder+"configure_log"+std::to_string(mpi_rank)+".log");
+        profile_output << "filename " << filename << std::endl
                     << "T " << T << std::endl
                     << "deltat " << deltat << std::endl
                     << "theta_fe "<< theta_fe << std::endl
@@ -111,7 +112,9 @@ int main(int argc, char *argv[]){
                     << "output_folder " << output_folder << std::endl
                     << "ionic_model " << tissue_type << std::endl
                     << "coupler " << coupler_type << std::endl;
-    profile_output.close();
+        profile_output.close();
+    }
+    
 
     std::unique_ptr<Iapp<dim>> I_app = std::make_unique<Iapp<dim>>();
     std::unique_ptr<D<dim>> d = std::make_unique<D<dim>>();

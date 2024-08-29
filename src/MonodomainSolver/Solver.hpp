@@ -59,6 +59,7 @@ public:
     {
 
 
+        profileData.solve_time = 0;
         profileData.mesh_init = 0;
         profileData.fe_setup = 0;
         profileData.ode_solve = 0;
@@ -154,8 +155,10 @@ public:
         time = 0.0;
         unsigned int time_step = 0;
         #ifndef CHECK_ACTIVATION_TIMES
-        fe_solver->output(time_step);
+        //fe_solver->output(time_step);
         #endif
+        auto start1 = std::chrono::high_resolution_clock::now();
+        
         while(time < T) {
             time += deltat;
             time_step++;
@@ -174,6 +177,9 @@ public:
             #endif
             profileData.N_iters++;
         }
+        auto stop1 = std::chrono::high_resolution_clock::now();
+
+        profileData.solve_time = std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count();
 
         profileData.ode_solve /= time_step;
         profileData.interpolation /= time_step;
@@ -184,8 +190,9 @@ public:
         profileData.avg_lin_iters /= time_step;
         profileData.comm_time /= time_step;
 
-        std::ofstream profile_output(output_folder+"profile_log"+std::to_string(mpi_rank)+".log");
-        profile_output << "mesh_init " << profileData.mesh_init << std::endl
+        if(mpi_rank == 0) {
+            std::ofstream profile_output(output_folder+"profile_log"+std::to_string(mpi_rank)+".log");
+            profile_output << "mesh_init " << profileData.mesh_init << std::endl
                         << "fe setup " << profileData.fe_setup << std::endl
                         << "ode_Solve " << profileData.ode_solve << std::endl
                         << "interpolation " << profileData.interpolation << std::endl
@@ -193,15 +200,19 @@ public:
                         << "fe solve tot " << profileData.fe_solve_tot << std::endl
                         << "fe linear solve time " << profileData.fe_linear_solve_time << std::endl
                         << "avg lin iters " << profileData.avg_lin_iters << std::endl
-                        << "comm time " << profileData.comm_time << std::endl;
+                        << "comm time " << profileData.comm_time << std::endl
+                        << "solve time " << profileData.solve_time << std::endl
+                        << "precond time " << profileData.fe_precond_init << std::endl;
 
-        profile_output.close();
+            profile_output.close();
+        }
+        
 
 
         
         #ifdef CHECK_ACTIVATION_TIMES
-        output_activation_times();
-        fe_solver->output(time_step);
+        //output_activation_times();
+        //fe_solver->output(time_step);
         #endif
     }
 

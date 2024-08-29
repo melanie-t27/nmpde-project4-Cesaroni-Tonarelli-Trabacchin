@@ -12,6 +12,7 @@ struct ProfileData {
     double fe_linear_solve_time;
     double avg_lin_iters;
     double comm_time;
+    double solve_time;
     int N_iters;
 };
 
