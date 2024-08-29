@@ -31,19 +31,27 @@
 #include "../IonicModels/ODESolver.hpp"
 
 using namespace dealii;
+
 template<int N_ion>
 class Solver;
 
+// Abstract base class for couplers integrating the ionic model with the monodomain solver
+// Template parameter N_ion specifies the number of ordinary differential equations
+// in the ionic model. For this implementation, N_ion is set to 3.
 template<int N_ion>
 class Coupler {
     static constexpr int dim = 3;
 public:
+    // The solveOde method is responsible for solving the system of ODEs
     virtual void solveOde(Solver<N_ion>& solver);
 
+    // The solveFE method is responsible for solving the monodomain equation using the FE method
     virtual void solveFE(Solver<N_ion>& solver, double time);
 
+    //setInitialGatingVariables sets the gating variables to their initial value
     virtual void setInitialGatingVariables(Solver<N_ion>& solver, std::array<std::unique_ptr<Function<dim>>, N_ion> gate_vars_0);
 
+    // Destructor
     virtual ~Coupler() {}
 };
 #endif

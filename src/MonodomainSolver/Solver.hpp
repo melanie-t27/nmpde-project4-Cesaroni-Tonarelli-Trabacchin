@@ -12,15 +12,18 @@
 
 using namespace dealii;
 
-// Class representing monodomain problem.
+// The class coordinates the 3 modules: Coupler, IonicModel and MonodomaiSolver
+// N_ion is the number of ODEs in the ionic model.
+// In our case N_ion is set to 3
 template<int N_ion>
 class Solver {
     // Physical dimension (1D, 2D, 3D)
     static constexpr unsigned int dim = 3;
 
 public:
-    // Constructor. We provide the final time, time step Delta t and theta method
-    // parameter as constructor arguments.
+    // Constructor. We provide mesh_file_name, polynomial degree, final time, time step Delta t, theta method
+    // parameters, mass lumping parameter, output_folder, ionic model, coupler, tissue conductivity tensor, I_app,
+    // initial condition and the initial gating variables as constructor parameters.
     Solver(
             const std::string  &mesh_file_name_,
             const unsigned int &r_,
@@ -51,19 +54,32 @@ public:
     , coupler(coupler_)
     , ode_solver(ode_theta_, deltat_, ionic_model_)
     {
-
+        // this method is responsible for:
+        // - Initializing the mesh
+        // - Initializing the finite element space and quadrature object
+        // - Initializing the DoF handler
         init();
+        // we initialize the fe_solver object with the needed constructor parameters
         fe_solver = std::make_unique<FESolver>(r_, T_, deltat_, fe_theta_, output_folder_, mesh, fe, quadrature, dof_handler, std::move(d_), std::move(I_app_));
+        // The setup method initializes the linear system, including the sparsity pattern, matrices, system rhs,
+        // and solution vector. It also assembles the matrices M and K, which are time-independent and can be
+        // assembled once outside the temporal loop.
         fe_solver->setup();
+        // Solution is set with initial value. The method takes in input  the initial condition u_0 and evaluates it on dofs
         fe_solver->setInitialSolution(std::move(u_0));
+        // The gating variables are initialized with the inital values.
+        // Depending on the chosen coupler, they are evaluated on dofs (ICICoupler and SVICoupler)
+        // or they are interpolated on quadrature nodes (GICoupler)
         coupler->setInitialGatingVariables(*this, std::move(gate_vars_0));
         #ifdef CHECK_ACTIVATION_TIMES
         std::cout << "checking activation times" << std::endl;
+        // we initialize the vector containing the activation times
         activation_times_init();
         #endif
         
     }
 
+    // Methods to retrieve private members
     std::shared_ptr<FiniteElement<dim>> getFiniteElement() {
         return fe;
     }
@@ -135,7 +151,11 @@ public:
             time += deltat;
             time_step++;
             pcout << "solving time step " << time_step << std::endl;
+            // we first solve the system of ODEs (the method takes in input a reference to
+            // an instance of the class Solver)
             coupler->solveOde(*this);
+            // we then solve the linear system assembled using FE method for the monodomain equation
+            // (the method takes in input a reference to an instance of the class Solver and current time)
             coupler->solveFE(*this, time);
     
             #ifndef CHECK_ACTIVATION_TIMES
@@ -146,11 +166,13 @@ public:
             }
 
             #ifdef CHECK_ACTIVATION_TIMES
+            // we compute the activation time
             compute_activation_times(time);
             #endif
         }
         
         #ifdef CHECK_ACTIVATION_TIMES
+        // we write the activation times to a file
         output_activation_times();
         fe_solver->output(time_step);
         #endif
@@ -274,14 +296,17 @@ private:
     }
 
     #ifdef CHECK_ACTIVATION_TIMES
-
     void compute_activation_times(double time) {
+        // provided current time, we retrieve the range of the solution owned by current process
       auto [first, last] = getFESolutionOwned().local_range();
+      // loop over the solution and check if it has raised from its resting value (about −84 mV) to a positive value.
       for(size_t i=first; i<last; i++) {
           if(getFESolutionOwned()[i] > 0 && activation_times_owned[i] < 0.000001){
+              // If It's > 0 we store the time in the corresponding position in activation_times_owned
               activation_times_owned[i] = time;
           }
       }
+      //perform communication
       activation_times = activation_times_owned;
     }
 

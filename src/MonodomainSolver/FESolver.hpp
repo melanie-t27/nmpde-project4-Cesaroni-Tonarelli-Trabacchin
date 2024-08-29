@@ -9,6 +9,8 @@ class FESolver {
     // Physical dimension (1D, 2D, 3D)
     static constexpr int dim = 3;
 public:
+    // Constructor. We provide polynomial degree, final time, time step Delta t, theta method
+    // parameter, mass lumping parameter, output_folder, mesh, fe, quadrature, dof_handler, tissue conductivity tensor, I_app.
     FESolver(
             const unsigned int &r_,
             const double       &T_,
@@ -56,6 +58,8 @@ public:
     // Output.
     void output(unsigned int time_step);
 
+    // method to return the value of Iion on current quadrature node,
+    // provided current cell_index and current quadrature node
     double& getIonicCurrent(int cell_index, int q) {
         return ionic_currents[cell_index * quadrature->size() + q];
     }
@@ -68,6 +72,8 @@ public:
         return solution_owned;
     }
 
+    // It takes initial condition, evaluates it on dofs and stores
+    // in solution_owned
     void setInitialSolution(std::unique_ptr<Function<dim>> u_0){
         VectorTools::interpolate(dof_handler, *u_0, solution_owned);
         solution = solution_owned;
@@ -75,8 +81,10 @@ public:
 
 private:
 
+    // cellular surface-to-volume ratio
     double chi = 140000 /*1/mm*/ ;
 
+    // membrane capacitance
     double C_m = 0.01 /*microF/(mm)^2*/;
 
 
@@ -149,10 +157,13 @@ private:
     // System solution (including ghost elements).
     TrilinosWrappers::MPI::Vector solution;
 
+    // tissue conductivity tensor
     std::unique_ptr<TensorFunction<2, dim>> d;
 
+    //applied external stimulus current
     std::unique_ptr<Function<dim>> I_app;
 
+    // vector storing Iion at each quadrature node
     std::vector<double> ionic_currents;
 
 };

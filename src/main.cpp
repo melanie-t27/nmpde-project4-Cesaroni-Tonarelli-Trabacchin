@@ -28,7 +28,7 @@ int main(int argc, char *argv[]){
     std::string filename = "../meshes/cuboid_v2.msh";
     std::string output_folder = "./";
 
-    // Process command line arguments
+    // Process command line arguments to override default values with user-specified ones
     for (int i = 1; i < argc; ++i)
     {
         if (std::string(argv[i]) == "-tt" && i + 1 < argc) // tissue type
@@ -49,19 +49,19 @@ int main(int argc, char *argv[]){
             T = std::stod(argv[i + 1]);
             ++i;
         }
-        else if (std::string(argv[i]) == "-dT" && i + 1 < argc){
+        else if (std::string(argv[i]) == "-dT" && i + 1 < argc){ // time step
             deltat = std::stod(argv[i + 1]);
             ++i;
         }
-        else if (std::string(argv[i]) == "-tfe" && i + 1 < argc){
+        else if (std::string(argv[i]) == "-tfe" && i + 1 < argc){ // theta_fe
             theta_fe = std::stod(argv[i + 1]);
             ++i;
         }
-        else if (std::string(argv[i]) == "-tode" && i + 1 < argc){
+        else if (std::string(argv[i]) == "-tode" && i + 1 < argc){ // theta_ode
             theta_ode = std::stod(argv[i + 1]);
             ++i;
         } 
-        else if(std::string(argv[i]) == "-o" && i + 1 < argc) {
+        else if(std::string(argv[i]) == "-o" && i + 1 < argc) { // output
             output_folder = argv[i + 1];
             ++i;
         }
@@ -73,11 +73,21 @@ int main(int argc, char *argv[]){
         }
     }
 
+    // We initialize all the objects passed as parameters to the constructor of the Solver class:
 
+    // Initial condition (defined in utils)
     std::unique_ptr<U_0<dim>> u_0 = std::make_unique<U_0<dim>>();
+
+    // Initial gating variables (defined in utils)
     std::array<std::unique_ptr<Function<dim>>, n_ion> gating_variables_0{{std::make_unique<GatingVariable_V0<dim>>(), std::make_unique<GatingVariable_W0<dim>>(), std::make_unique<GatingVariable_S0<dim>>() }};
+
+    // Ionic model, with the tissue_type passed as a parameter to the constructor
     std::shared_ptr<BuenoOrovioIonicModel<n_ion>> ionic_model = std::make_shared<BuenoOrovioIonicModel<n_ion>>(tissue_type);
+
+    // Coupler, which will be chosen based on the command line argument
     std::shared_ptr<Coupler<n_ion>> coupler;
+
+    //Based on coupler_type value, we create an instance of the corresponding coupler
     switch (coupler_type)
     {
     case 0:
@@ -96,7 +106,11 @@ int main(int argc, char *argv[]){
         throw -1;
         break;
     }
+
+    // Applied external stimulus current
     std::unique_ptr<Iapp<dim>> I_app = std::make_unique<Iapp<dim>>();
+
+    // Tissue conductivity tensor
     std::unique_ptr<D<dim>> d = std::make_unique<D<dim>>();
     Solver<n_ion> solver(filename, degree, T, deltat, theta_fe, theta_ode, output_folder, ionic_model, coupler, std::move(d), std::move(I_app), std::move(u_0), gating_variables_0);
     solver.solve();

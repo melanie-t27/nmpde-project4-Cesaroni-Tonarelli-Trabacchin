@@ -3,6 +3,7 @@
 #include <array>
 #include "../utils.hpp"
 
+// Abstract class representing the ionic model, from which the BuenoOrovioModel class inherits
 template<int N_ion>
 class IonicModel {
 public:

@@ -7,7 +7,7 @@ using namespace dealii;
 
 void FESolver::setup()
 {
-    // Initialise linear system.
+    // Initialize linear system.
     ionic_currents.resize(mesh.n_active_cells() * quadrature->size());
     pcout << "Initializing the linear system" << std::endl;
     pcout << "  Initializing the sparsity pattern" << std::endl;
@@ -121,15 +121,14 @@ void FESolver::assemble_rhs(const double time) {
 
         for (unsigned int q = 0; q < n_q; ++q) {
             // We need to compute the forcing term at the current time (tn+1) and
-            // at the old time (tn). deal.II Functions can be computed at a
-            // specific time by calling their set_time method.
+            // at the old time (tn).
 
-            // Compute f(tn+1)
-            I_app->set_time(time);//I_app is yet to be defined
+            // Compute Iapp(tn+1)
+            I_app->set_time(time);
             const double I_app_new_loc =
                     I_app->value(fe_values.quadrature_point(q));
 
-            // Compute f(tn)
+            // Compute Iapp(tn)
             I_app->set_time(time - deltat);
             const double I_app_old_loc = I_app->value(fe_values.quadrature_point(q));
 
