@@ -12,7 +12,7 @@
 
 using namespace dealii;
 
-// Class representing the monodomain problem.
+// The class coordinates the 3 modules: Coupler, IonicModel and MonodomaiSolver
 // N_ion is the number of ODEs in the ionic model.
 // In our case N_ion is set to 3
 template<int N_ion>
@@ -70,7 +70,7 @@ public:
         fe_solver->setInitialSolution(std::move(u_0));
         // The gating variables are initialized with the inital values.
         // Depending on the chosen coupler, they are evaluated on dofs (ICICoupler and SVICoupler)
-        // or they are also interpolated on quadrature nodes (GICoupler)
+        // or they are interpolated on quadrature nodes (GICoupler)
         coupler->setInitialGatingVariables(*this, std::move(gate_vars_0));
         #ifdef CHECK_ACTIVATION_TIMES
         std::cout << "checking activation times" << std::endl;
@@ -307,7 +307,7 @@ private:
               activation_times_owned[i] = time;
           }
       }
-      //perform communication among processes
+      //perform communication
       activation_times = activation_times_owned;
     }
 

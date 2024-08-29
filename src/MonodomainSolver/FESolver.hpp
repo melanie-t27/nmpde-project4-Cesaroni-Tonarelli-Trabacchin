@@ -60,7 +60,7 @@ public:
     // Output.
     void output(unsigned int time_step);
 
-    // method to return the value of Iion,
+    // method to return the value of Iion on current quadrature node,
     // provided current cell_index and current quadrature node
     double& getIonicCurrent(int cell_index, int q) {
         return ionic_currents[cell_index * quadrature->size() + q];
@@ -74,7 +74,7 @@ public:
         return solution_owned;
     }
 
-    // It takes initial condition and evaluates it on dofs and stores
+    // It takes initial condition, evaluates it on dofs and stores
     // in solution_owned
     void setInitialSolution(std::unique_ptr<Function<dim>> u_0){
         VectorTools::interpolate(dof_handler, *u_0, solution_owned);

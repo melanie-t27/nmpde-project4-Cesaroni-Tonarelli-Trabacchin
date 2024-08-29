@@ -17,12 +17,14 @@ class GICoupler : public Coupler<N_ion> {
     static constexpr unsigned int dim = 3;
 
 public:
-    // In this case the solveOde method is different from the others as we solve the system of
-    // ODEs on each quadrature node. So we are going to interpolate the FESolution on quadrature nodes,
+
+    // In this case the solveOde method is different with respect to the other couplers, as we solve the system of
+    // ODEs on each quadrature node. Therefore, we interpolate the FE Solution on quadrature nodes,
     // create its view and pass it as a parameter, together with the view of gate_vars (defined on quadrature nodes),
     // to the solve method of the ODESolver class
+
     void solveOde(Solver<N_ion>& solver) override {
-        // we retrieve  and initialize all the objects needed in order to perform the interpolation of FESolution
+        // we retrieve  and initialize all the objects needed in order to perform the interpolation of the FE solution
         std::shared_ptr<FiniteElement<dim>> fe = solver.getFiniteElement();
         std::shared_ptr<Quadrature<dim>> quadrature = solver.getQuadrature();
         FEValues<dim>  fe_values(*fe,*quadrature,update_values | update_gradients | update_quadrature_points | update_JxW_values);
@@ -88,7 +90,7 @@ public:
     }
 
 
-    // In this case this method is different compared to the other couplers as
+    // This method is different compared to the other couplers as
     // the initial gating variables need to be interpolated on quadrature nodes
     void setInitialGatingVariables(Solver<N_ion>& solver, std::array<std::unique_ptr<Function<dim>>, N_ion>  gate_vars_0) {
         // we retrieve all the objects that we need in order to perform interpolation
@@ -112,7 +114,7 @@ public:
             gate_vars[i].resize(solver.getMesh().n_active_cells() * n_q);
         }
         interpolated_u.resize(solver.getMesh().n_active_cells() * n_q);
-        // we initialize gate_vars_temp_owned with the initial values (evaluated at dofs)
+        // we initialize gate_vars_temp and gate_vars_temp_owned with the initial values (evaluated at dofs)
         for(int i = 0; i < N_ion; i++) {
             gate_vars_temp_owned[i].reinit(locally_owned_dofs, MPI_COMM_WORLD);
             gate_vars_temp[i].reinit(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);

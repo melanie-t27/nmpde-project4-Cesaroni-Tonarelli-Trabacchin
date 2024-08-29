@@ -86,7 +86,7 @@ int main(int argc, char *argv[]){
     // Initial gating variables (defined in utils)
     std::array<std::unique_ptr<Function<dim>>, n_ion> gating_variables_0{{std::make_unique<GatingVariable_V0<dim>>(), std::make_unique<GatingVariable_W0<dim>>(), std::make_unique<GatingVariable_S0<dim>>() }};
 
-    // Ionic model, with the tissue_type passed as a parameter to the constructor of the BuenoOrovioModel class
+    // Ionic model, with the tissue_type passed as a parameter to the constructor
     std::shared_ptr<BuenoOrovioIonicModel<n_ion>> ionic_model = std::make_shared<BuenoOrovioIonicModel<n_ion>>(tissue_type);
 
     // Coupler, which will be chosen based on the command line argument

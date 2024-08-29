@@ -10,7 +10,7 @@ class BuenoOrovioIonicModel : public IonicModel<N_ion> {
 public:
    // The tissue_type parameter, representing the type of cardiac tissue (epicardium, myocardium, endocardium),
    // is provided to the constructor.
-   //
+
     BuenoOrovioIonicModel(const int tissue_type){
         switch(tissue_type){
             case 0 : // EPI

@@ -43,7 +43,7 @@ public:
         std::shared_ptr<IonicModel<N_ion>> ionicModel = solver.getIonicModel();
         const unsigned int dofs_per_cell = fe->dofs_per_cell;
         const unsigned int n_q           = quadrature->size();
-        // interpolates_ionic_current will store the value of I_ion interpolated at current quadrature node
+        // interpolated_ionic_current will store the value of I_ion interpolated at current quadrature node
         double interpolated_ionic_current = 0;
         std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
        
@@ -58,7 +58,7 @@ public:
                 for (unsigned int i = 0; i < dofs_per_cell; ++i) {
                     double shape_value = fe_values.shape_value(i, q);
                     size_t local_index = local_dof_indices[i];
-                    // we store in vars the values of gating variables at current dof index
+                    // we store in vars the values of gating variables at current dof
                     GatingVariables<N_ion> vars;
                     for(int j = 0; j < N_ion; j++) {
                         vars.get(j) = gate_vars[j][local_index];

@@ -87,23 +87,20 @@ public:
                 solver.getIonicCurrent(cell->active_cell_index(), q) = ionicModel->ionic_current(interpolated_values[N_ion],  vars);
             }
         }
-        // finally we can call the solve_time_step method, method of the FESolver class, which is responsible
+        // finally we call the solve_time_step method, method of the FESolver class, which is responsible
         // for solving, at each time step, the assembled linear system
         solver.getFESolver()->solve_time_step(time);
     }
 
-    // the method takes as input parameter also gate_vars_0, which stores the initial values of the gating variables
-    // (members of the utils class).
+
     void setInitialGatingVariables(Solver<N_ion>& solver, std::array<std::unique_ptr<Function<dim>>, N_ion>  gate_vars_0) {
         IndexSet locally_relevant_dofs;
         IndexSet locally_owned_dofs = solver.getDofHandler().locally_owned_dofs();
         DoFTools::extract_locally_relevant_dofs(solver.getDofHandler(), locally_relevant_dofs);
         for(int i = 0; i < N_ion; i++) {
-            // we initialize and evaluate each gate variable at dofs
             gate_vars_owned[i].reinit(locally_owned_dofs, MPI_COMM_WORLD);
             gate_vars[i].reinit(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
             VectorTools::interpolate(solver.getDofHandler(), *gate_vars_0[i], gate_vars_owned[i]);
-            // perform necessary communication
             gate_vars[i] = gate_vars_owned[i];
         }
     }
