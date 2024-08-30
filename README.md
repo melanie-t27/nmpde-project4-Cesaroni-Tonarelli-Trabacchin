@@ -61,6 +61,6 @@ where
    - `-tt` is the tissue type to simulate, in particular
       - 0 corresponds to the epicardium
       - 1 corresponds to the myd-miocardium
-      - 2 corresponds to the enocardium
+      - 2 corresponds to the endocardium
    - `-os` specify how many time steps there are between two output files
 - `-o` is the prefix attached to all output files
