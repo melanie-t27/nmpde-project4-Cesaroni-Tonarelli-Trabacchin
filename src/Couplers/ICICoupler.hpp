@@ -7,6 +7,8 @@
 #include "../VectorView.hpp"
 #include <cstring>
 #include <chrono>
+#include <map>
+
 
 using namespace dealii;
 // Class responsible for the implementation of the ionic current interpolation approach
@@ -18,6 +20,7 @@ public:
     // In this case the solveOde method is identical to the one in SVICoupler.
     // Also in this case the gating variables are defined on dofs.
     void solveOde(Solver<N_ion>& solver) override {
+        std::shared_ptr<IonicModel<N_ion>> ionicModel = solver.getIonicModel();
         std::vector<VectorView<TrilinosWrappers::MPI::Vector>> gate_vars_views;
         for(int i = 0; i < N_ion; i++) {
             auto [first, last] = gate_vars_owned[i].local_range();
@@ -29,6 +32,15 @@ public:
         for(int i = 0; i < N_ion; i++) {
             gate_vars[i] = gate_vars_owned[i];
         }
+
+        for(size_t i = first; i < last; i++) {
+            GatingVariables<N_ion> vars;
+            for(int j = 0; j < N_ion; j++) {
+                vars.get(j) = gate_vars[j][i];
+            }
+            ionic_currents_owned[i] = ionicModel->ionic_current(solver.getFESolution()[i], vars);
+        }
+
     }
 
     // In this case the I_ion will be evaluated at the gating variables and then interpolated on each
@@ -47,21 +59,9 @@ public:
         double interpolated_ionic_current = 0;
         std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
+        auto [first, last] = solver.getFESolutionOwned().local_range();
 
         //ionic current is precomputed for each degree of freedom
-        auto [first, last] = gate_vars_owned[0].local_range();
-        std::vector<double> ionicCurrentVec;
-        ionicCurrentVec.resize(last-first);
-        for(size_t i = first; i < last; i++) {
-            GatingVariables<N_ion> vars;
-            for(int j = 0; j < N_ion; j++) {
-                vars.get(j) = gate_vars[j][i];
-            }
-            ionicCurrentVec[i - first] = ionicModel->ionic_current(solver.getFESolution()[i], vars);
-        }
-
- 
-       
         for(const auto &cell : dofHandler.active_cell_iterators()) {
             if (!cell->is_locally_owned())
                 continue;
@@ -74,12 +74,18 @@ public:
                     double shape_value = fe_values.shape_value(i, q);
                     size_t local_index = local_dof_indices[i];
                     // we store in vars the values of gating variables at current dof
-                    GatingVariables<N_ion> vars;
-                    for(int j = 0; j < N_ion; j++) {
-                        vars.get(j) = gate_vars[j][local_index];
-                    }
+                    
                     // we use the precomputed I_ion and interpolate it on current quadrature node
-                    interpolated_ionic_current += ionicCurrentVec[local_index] * shape_value;
+                    if(local_index >= first && local_index <= last) {
+                        interpolated_ionic_current += ionic_currents_owned[local_index] * shape_value;
+                    } else {
+                        GatingVariables<N_ion> vars;
+                        for(int j = 0; j < N_ion; j++) {
+                            vars.get(j) = gate_vars[j][local_index];
+                        }
+                        interpolated_ionic_current += ionicModel->ionic_current(solver.getFESolution()[local_index], vars) * shape_value;
+                    }
+                    
                 }
                 // we store in the corresponding position of IonicCurrents (member of FESolver class) the value of interpolated I_ion
                 solver.getIonicCurrent(cell->active_cell_index(), q) = interpolated_ionic_current;
@@ -102,6 +108,8 @@ public:
             VectorTools::interpolate(solver.getDofHandler(), *gate_vars_0[i], gate_vars_owned[i]);
             gate_vars[i] = gate_vars_owned[i];
         }
+        ionic_currents_owned.reinit(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
+
     }
 
 
@@ -110,6 +118,8 @@ public:
 private:
     std::array<TrilinosWrappers::MPI::Vector, N_ion> gate_vars;//defined over dofs
     std::array<TrilinosWrappers::MPI::Vector, N_ion> gate_vars_owned;//defined over dofs
+    TrilinosWrappers::MPI::Vector ionic_currents_owned;
+
 
 };
 #endif
