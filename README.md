@@ -1,5 +1,5 @@
 # Cardiac Electrophysiology
-This repository contains the code of the project for the Numerical Methods for Partial Differential Equations course @Polimi (pfof. Alfio Maria Quarterooni, TA Michele Bucelli).
+This repository contains the code of the project for the Numerical Methods for Partial Differential Equations course @Polimi (prof. Alfio Maria Quarteroni, TA Michele Bucelli).
 **Students**:
 - [Sabrina Cesaroni](https://github.com/SabrinaCesaroni)
 - [Melanie Tonarelli](https://github.com/melanie-t27)
@@ -53,7 +53,7 @@ where
 - `-tfe` is the theta value for the Monodomain equation
 - `tode` is the theta value for the system of ODEs of the Ionic Model
 - `-ct` is the coupler type, in particular
-   - 0 corrsponds to the `ICI COupler`
+   - 0 corrsponds to the `ICI Coupler`
    - 1 corrsponds to the `GI Coupler`
    - 2 corrsponds to the `SVI Coupler`
 - `-tt` is the tissue type to simulate, in particular
