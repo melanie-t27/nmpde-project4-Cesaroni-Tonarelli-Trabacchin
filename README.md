@@ -20,7 +20,6 @@ The software needs a mesh as one of the inputs. Various formats are accepted, in
 A script is provided in the scripts folder, which can be used to generate a 21 mm x 7 mm x 3 mm cuboid mesh, with an adjustable refinement.
 In order to use it, the following instructions should be followed:
 ```bash
-
 $ mkdir build
 $ cd build
 $ cmake ..
@@ -37,9 +36,11 @@ Then run the following commands:
 ```bash
 $ mkdir build
 $ cd build
-$ cmake ..
+$ cmake .. -DCHECK_ACTIVATION_TIMES=[ON|OFF]
 $ make
 ```
+
+In order to compile so that the activation times files is written in output, the `CHECK_ACTIVATION_TIMES` variable must be set to `ON`.
 ## Execution
 The executable will be created into `build`, and can be executed from the `build` folder through
 ```bash

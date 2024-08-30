@@ -27,6 +27,7 @@ int main(int argc, char *argv[]){
     int coupler_type = 0;
     std::string filename = "../meshes/cuboid_v2.msh";
     std::string output_folder = "./";
+    int os = 100;
 
     // Process command line arguments to override default values with user-specified ones
     for (int i = 1; i < argc; ++i)
@@ -63,6 +64,9 @@ int main(int argc, char *argv[]){
         } 
         else if(std::string(argv[i]) == "-o" && i + 1 < argc) { // output
             output_folder = argv[i + 1];
+            ++i;
+        } else if(std::string(argv[i]) == "-os" && i + 1 < argc) {
+            os =  std::stoi(argv[i + 1]);
             ++i;
         }
         else {
@@ -112,7 +116,7 @@ int main(int argc, char *argv[]){
 
     // Tissue conductivity tensor
     std::unique_ptr<D<dim>> d = std::make_unique<D<dim>>();
-    Solver<n_ion> solver(filename, degree, T, deltat, theta_fe, theta_ode, output_folder, ionic_model, coupler, std::move(d), std::move(I_app), std::move(u_0), gating_variables_0);
+    Solver<n_ion> solver(filename, degree, T, deltat, theta_fe, theta_ode, os, output_folder, ionic_model, coupler, std::move(d), std::move(I_app), std::move(u_0), gating_variables_0);
     solver.solve();
     return 0;
 }

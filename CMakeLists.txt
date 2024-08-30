@@ -9,7 +9,12 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wpedantic")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
-add_definitions (-D CHECK_ACTIVATION_TIMES)
+#add_definitions (-D CHECK_ACTIVATION_TIMES)
+if(CHECK_ACTIVATION_TIMES STREQUAL "ON")
+    message(STATUS "Compiling with activation times support")
+    add_definitions (-D CHECK_ACTIVATION_TIMES)
+    # Add logic here based on the value of MY_VARIABLE
+endif()
 
 add_executable(nmpde src/main.cpp
         src/MonodomainSolver/FESolver.cpp )

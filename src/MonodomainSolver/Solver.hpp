@@ -21,7 +21,7 @@ class Solver {
     static constexpr unsigned int dim = 3;
 
 public:
-    // Constructor. We provide mesh_file_name, polynomial degree, final time, time step Delta t, theta method
+    // Constructor. We provide mesh_file_name, polynomial degree, final time, time step Delta t, theta method, output steps
     // parameters, mass lumping parameter, output_folder, ionic model, coupler, tissue conductivity tensor, I_app,
     // initial condition and the initial gating variables as constructor parameters.
     Solver(
@@ -31,6 +31,7 @@ public:
             const double       &deltat_,
             const double       &fe_theta_,
             const double       &ode_theta_,
+            const int          &os_,
             std::string output_folder_,
             std::shared_ptr<IonicModel<N_ion>> ionic_model_,
             std::shared_ptr<Coupler<N_ion>> coupler_,
@@ -53,6 +54,7 @@ public:
     , ionic_model(ionic_model_)
     , coupler(coupler_)
     , ode_solver(ode_theta_, deltat_, ionic_model_)
+    , os(os_)
     {
         // this method is responsible for:
         // - Initializing the mesh
@@ -158,10 +160,7 @@ public:
             // (the method takes in input a reference to an instance of the class Solver and current time)
             coupler->solveFE(*this, time);
     
-            #ifndef CHECK_ACTIVATION_TIMES
-            fe_solver->output(time_step);
-            #endif
-            if(time_step % 100 == 0) {
+            if(time_step % os == 0) {
                 fe_solver -> output(time_step);
             }
 
@@ -174,7 +173,6 @@ public:
         #ifdef CHECK_ACTIVATION_TIMES
         // we write the activation times to a file
         output_activation_times();
-        fe_solver->output(time_step);
         #endif
     }
 
@@ -243,6 +241,9 @@ private:
 
     // DoF handler.
     DoFHandler<dim> dof_handler;
+
+    //time steps between two output files
+    int os;
 
 
 

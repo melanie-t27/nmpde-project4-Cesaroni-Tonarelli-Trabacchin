@@ -46,6 +46,21 @@ public:
         // interpolated_ionic_current will store the value of I_ion interpolated at current quadrature node
         double interpolated_ionic_current = 0;
         std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+
+
+        //ionic current is precomputed for each degree of freedom
+        auto [first, last] = gate_vars_owned[0].local_range();
+        std::vector<double> ionicCurrentVec;
+        ionicCurrentVec.resize(last-first);
+        for(size_t i = first; i < last; i++) {
+            GatingVariables<N_ion> vars;
+            for(int j = 0; j < N_ion; j++) {
+                vars.get(j) = gate_vars[j][i];
+            }
+            ionicCurrentVec[i - first] = ionicModel->ionic_current(solver.getFESolution()[i], vars);
+        }
+
+ 
        
         for(const auto &cell : dofHandler.active_cell_iterators()) {
             if (!cell->is_locally_owned())
@@ -63,8 +78,8 @@ public:
                     for(int j = 0; j < N_ion; j++) {
                         vars.get(j) = gate_vars[j][local_index];
                     }
-                    // we evaluate I_ion at the gating variables and interpolate it on current quadrature node
-                    interpolated_ionic_current += ionicModel->ionic_current(solver.getFESolution()[local_index], vars) * shape_value;
+                    // we use the precomputed I_ion and interpolate it on current quadrature node
+                    interpolated_ionic_current += ionicCurrentVec[local_index] * shape_value;
                 }
                 // we store in the corresponding position of IonicCurrents (member of FESolver class) the value of interpolated I_ion
                 solver.getIonicCurrent(cell->active_cell_index(), q) = interpolated_ionic_current;
