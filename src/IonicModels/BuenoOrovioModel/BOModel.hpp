@@ -197,21 +197,21 @@ public:
     }
 
     // J_fi
-    double get_FI(double u, GatingVariables<N_ion>& vars) override
+    double get_FI(double u, GatingVariables<N_ion>& vars) 
     {
         u = getAdimensionalU(u);
         return - vars.get(0) * H(u - theta_v) * (u - theta_v) * (u_u - u)/tau_fi;
     }
 
     // J_so
-    double get_SO(double u, GatingVariables<N_ion>& /*vars*/) override
+    double get_SO(double u, GatingVariables<N_ion>& /*vars*/) 
     {
         u = getAdimensionalU(u);
         return u*(1 - H(u - theta_w))/tau_o(u) + H(u - theta_w)/tau_so(u);
     }
 
     // J_si
-    double get_SI(double u, GatingVariables<N_ion>& vars) override
+    double get_SI(double u, GatingVariables<N_ion>& vars) 
     {
         u = getAdimensionalU(u);
         return -H(u - theta_w) * vars.get(1) * vars.get(2)/tau_si;

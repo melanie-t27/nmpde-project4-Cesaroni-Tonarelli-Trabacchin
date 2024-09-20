@@ -14,12 +14,6 @@ public:
 
     virtual std::tuple<double, double> getExpansionCoefficients(int index, double u);
 
-    virtual double get_FI(double u, GatingVariables<N_ion>& vars) = 0;
-
-    virtual double get_SO(double u, GatingVariables<N_ion>& vars) = 0;
-
-    virtual double get_SI(double u, GatingVariables<N_ion>& vars) = 0;
-    
     virtual ~IonicModel() {}
 };
 #endif
