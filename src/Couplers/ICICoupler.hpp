@@ -4,7 +4,6 @@
 #include <vector>
 #include "Coupler.hpp"
 #include "../utils.hpp"
-#include "../VectorView.hpp"
 #include <cstring>
 #include <chrono>
 #include <map>
@@ -21,19 +20,9 @@ public:
     // Also in this case the gating variables are defined on dofs.
     void solveOde(Solver<N_ion>& solver) override {
         std::shared_ptr<IonicModel<N_ion>> ionicModel = solver.getIonicModel();
-        std::vector<VectorView<TrilinosWrappers::MPI::Vector>> gate_vars_views;
-        for(int i = 0; i < N_ion; i++) {
-            auto [first, last] = gate_vars[i].local_range();
-            gate_vars_views.emplace_back(gate_vars[i], first, last - first);
-        }
-        auto [first, last] = solver.getFESolutionOwned().local_range();
-        VectorView<TrilinosWrappers::MPI::Vector> sol_view(solver.getFESolutionOwned(), first, last - first);
-        solver.getOdeSolver().solve(sol_view, gate_vars_views);
-        /*for(int i = 0; i < N_ion; i++) {
-            gate_vars[i] = gate_vars_owned[i];
-        }*/
+        solver.getOdeSolver().solve(solver.getFESolutionOwned(), gate_vars, index_set);
 
-        for(size_t i = first; i < last; i++) {
+        for(auto i : index_set) {
             GatingVariables<N_ion> vars;
             for(int j = 0; j < N_ion; j++) {
                 vars.get(j) = gate_vars[j][i];
@@ -101,6 +90,7 @@ public:
             VectorTools::interpolate(solver.getDofHandler(), *gate_vars_0[i], gate_vars[i]);
         }
         ionic_currents_owned.reinit(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
+        index_set = locally_owned_dofs;
     }
 
 
@@ -110,7 +100,7 @@ private:
     std::array<TrilinosWrappers::MPI::Vector, N_ion> gate_vars;//defined over dofs
     TrilinosWrappers::MPI::Vector ionic_currents_owned;
     TrilinosWrappers::MPI::Vector ionic_currents;
-
+    IndexSet index_set;
 
 };
 #endif

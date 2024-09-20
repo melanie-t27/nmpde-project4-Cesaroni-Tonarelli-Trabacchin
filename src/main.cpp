@@ -25,7 +25,7 @@ int main(int argc, char *argv[]){
     double deltat = 0.05/1000;
     int tissue_type = 0;
     int coupler_type = 0;
-    std::string filename = "../meshes/cuboid_v2.msh";
+    std::string filename = "../meshes/cuboid-step-0.0005.msh";
     std::string output_folder = "./";
     int os = 100;
 

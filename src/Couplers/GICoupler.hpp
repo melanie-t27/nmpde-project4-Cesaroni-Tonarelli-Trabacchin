@@ -4,7 +4,6 @@
 #include <vector>
 #include "Coupler.hpp"
 #include "../utils.hpp"
-#include "../VectorView.hpp"
 #include <cstring>
 #include <chrono>
 
@@ -54,15 +53,8 @@ public:
                 interpolated_u[cell->active_cell_index() * n_q + q] = interpolated_value;
             }
         }
-        // create the view of gating variables
-        std::vector<VectorView<std::vector<double>>> gate_vars_views;
-        for(int i = 0; i < N_ion; i++) {
-            gate_vars_views.emplace_back(gate_vars[i], 0, gate_vars[i].size());
-        }
-        // create the view of the interpolated solution on quadrature nodes
-        VectorView<std::vector<double>> sol_view(interpolated_u, 0, interpolated_u.size());
         // solve the system of ODEs
-        solver.getOdeSolver().solve(sol_view, gate_vars_views);
+        solver.getOdeSolver().solve(interpolated_u, gate_vars);
     }
 
 

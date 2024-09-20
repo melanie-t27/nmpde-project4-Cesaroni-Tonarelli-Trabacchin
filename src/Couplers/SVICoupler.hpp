@@ -4,7 +4,6 @@
 #include <vector>
 #include "Coupler.hpp"
 #include "../utils.hpp"
-#include "../VectorView.hpp"
 #include <cstring>
 #include <chrono>
 
@@ -19,17 +18,8 @@ class SVICoupler : public Coupler<N_ion> {
 
 public:
     void solveOde(Solver<N_ion>& solver) override {
-        // We construct views of the gating variables for efficient access and manipulation
-        std::vector<VectorView<TrilinosWrappers::MPI::Vector>> gate_vars_views;
-        for(int i = 0; i < N_ion; i++) {
-            auto [first, last] = gate_vars_owned[i].local_range();
-            gate_vars_views.emplace_back(gate_vars_owned[i], first, last - first);
-        }
-        // We construct the view of the FE solution
-        auto [first, last] = solver.getFESolutionOwned().local_range();
-        VectorView<TrilinosWrappers::MPI::Vector> sol_view(solver.getFESolutionOwned(), first, last - first);
         // We solve the system of ODEs by calling the solve method, member of the OdeSolver class
-        solver.getOdeSolver().solve(sol_view, gate_vars_views);
+        solver.getOdeSolver().solve(solver.getFESolutionOwned(), gate_vars_owned, index_set);
         // We perform the necessary communication
         for(int i = 0; i < N_ion; i++) {
             gate_vars[i] = gate_vars_owned[i];
@@ -97,6 +87,7 @@ public:
         IndexSet locally_relevant_dofs;
         IndexSet locally_owned_dofs = solver.getDofHandler().locally_owned_dofs();
         DoFTools::extract_locally_relevant_dofs(solver.getDofHandler(), locally_relevant_dofs);
+        index_set = locally_owned_dofs;
         for(int i = 0; i < N_ion; i++) {
             gate_vars_owned[i].reinit(locally_owned_dofs, MPI_COMM_WORLD);
             gate_vars[i].reinit(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
@@ -111,6 +102,6 @@ private:
     // gate_vars and gate_vars_owned are defined on dofs
     std::array<TrilinosWrappers::MPI::Vector, N_ion> gate_vars;
     std::array<TrilinosWrappers::MPI::Vector, N_ion> gate_vars_owned;
-
+    IndexSet index_set;
 };
 #endif
